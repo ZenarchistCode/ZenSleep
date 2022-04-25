@@ -1,0 +1,16 @@
+MetaFileClass {
+ Name "{C23EDDE3D8F8907E}zensleep_thumbnail.edds"
+ Author "thoth-2022"
+ ChangeDate -1006261095
+ Configurations {
+  PNGResourceClass PC {
+   SourceFile "zensleep_thumbnail.png"
+  }
+  PNGResourceClass XBOX_ONE : PC {
+  }
+  PNGResourceClass PS4 : PC {
+  }
+  PNGResourceClass LINUX : PC {
+  }
+ }
+}

@@ -46,8 +46,6 @@ All of these features are adjustable on the server-side config so your experienc
 
 
 
-
-
 Server Owner Guide:
 
 Main Sleep Mod Features (All Configurable in ZenSleepConfig.json):

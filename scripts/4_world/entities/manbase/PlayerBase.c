@@ -49,13 +49,13 @@ modded class PlayerBase
 	void PlayerBase() { }
 
 	// Print a debug message (client-only)
-	/*void DebugMessage(string message)
+	void DebugMessage(string message)
 	{
 		if (GetGame().GetPlayer())
 		{
 			GetGame().GetMission().OnEvent(ChatMessageEventTypeID, new ChatMessageEventParams(CCDirect, "", "[Sleep:" + GetIdentity().GetName() + "] " + message, ""));
 		}
-	}*/
+	}
 
 	// Sends a text message to the client
 	void SendMessage(string message)
@@ -482,7 +482,9 @@ modded class PlayerBase
 						{
 							warmCold = GetZenSleepConfig().Str_RestUpdate3; // and I'm warm
 						}
-						if (GetFireSleepAccelerator() > 1.0 && (m_HasHeatBuffer || heatSource)) // Yes fire + accelerator + heat buff
+
+						// Yes fire inside + heat buff
+						if (GetFireSleepAccelerator() > (((float)GetZenSleepConfig().OutsideFireAcceleratorPercent / 100.0) + 1.0) && m_SleepingInside && m_HasHeatBuffer)
 						{
 							warmCold = GetZenSleepConfig().Str_RestUpdate4; // and I'm comfortably warm
 						}

@@ -1,0 +1,10 @@
+name = "Zenarchist's Sleep Mod"; // name
+picture = "ZenSleep\data\zensleep_thumbnail.edds"; // picture in expanded description
+logoSmall = "ZenSleep\data\zensleep_thumbnail.edds"; // icon next to mod name when description is not expanded
+logo = "ZenSleep\data\zensleep_thumbnail.edds"; // logo below game menu
+logoOver = "ZenSleep\data\zensleep_thumbnail.edds"; // on mouse hover over logo
+tooltip = "Zenarchist's Sleep Mod"; // tool tip on mouse hover
+overview = "Adds immersive sleeping features to the game."; // overview
+action = "https://zenarchist.io/"; // link
+author = "Zenarchist"; // author
+version = "1.0"; // version

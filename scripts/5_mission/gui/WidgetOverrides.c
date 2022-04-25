@@ -5,7 +5,7 @@ modded class ItemActionsWidget extends ScriptedWidgetEventHandler
 	{
 		super.Update();
 
-		if (m_Player && m_Player.IsAlive() && m_Player.m_IsSleeping && m_Player.m_HideHudWhileSleeping && m_Root)
+		if (m_Player && m_Player.m_IsSleeping && m_Player.m_HideHudWhileSleeping && m_Root && m_Player.IsAlive())
 		{
 			m_Root.Show(false);
 		}
@@ -19,7 +19,7 @@ modded class ActionTargetsCursor extends ScriptedWidgetEventHandler
 	{
 		super.Update();
 
-		if (m_Player && m_Player.IsAlive() && m_Player.m_IsSleeping && m_Player.m_HideHudWhileSleeping && m_Root)
+		if (m_Player && m_Player.m_IsSleeping && m_Player.m_HideHudWhileSleeping && m_Root && m_Player.IsAlive())
 		{
 			m_Hidden = true;
 		}

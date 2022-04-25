@@ -64,7 +64,7 @@ modded class IngameHud
 		// Check if only show while tabbed is enabled from server config and if our inventory is open
 		bool overrideSleep = true;
 		PlayerBase player = GetGame().GetPlayer();
-		if (!player)
+		if (!player || !player.IsAlive())
 		{
 			if (m_TirednessIconPanel && m_TirednessBarPanel)
 			{
@@ -98,7 +98,7 @@ modded class IngameHud
 		// Hide hud if config is turned on
 		if (player && player.m_HideHudWhileSleeping)
 		{
-			if (player.m_IsSleeping)
+			if (player.m_IsSleeping && player.IsAlive())
 			{
 				m_Stamina.Show(false);
 				m_StaminaBackground.Show(false);
@@ -116,6 +116,5 @@ modded class IngameHud
 				m_Presence.Show(shouldShow);
 			}
 		}
-		
 	}
 }
