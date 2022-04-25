@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<types>
+	<type name="ZenSleep_Syringe"> <!-- Syringe that makes a player fall asleep (0% rested/uncon) -->
+        <nominal>1</nominal> <!-- 1 spawn on the map at any time -->
+        <lifetime>14400</lifetime> <!-- 4 hours -->
+        <restock>0</restock>
+        <min>1</min>
+        <quantmin>-1</quantmin>
+        <quantmax>-1</quantmax>
+        <cost>100</cost>
+        <flags count_in_cargo="0" count_in_hoarder="0" count_in_map="1" count_in_player="0" crafted="0" deloot="0"/>
+        <category name="tools"/>
+        <tag name="shelves"/>
+        <usage name="Medic"/>
+    </type>
+	<type name="ZenSleep_StimSyringe"> <!-- Syringe that makes a player full energy (100% rested) -->
+        <nominal>1</nominal> <!-- 1 spawn on the map at any time -->
+        <lifetime>14400</lifetime> <!-- 4 hours -->
+        <restock>0</restock>
+        <min>1</min>
+        <quantmin>-1</quantmin>
+        <quantmax>-1</quantmax>
+        <cost>100</cost>
+        <flags count_in_cargo="0" count_in_hoarder="0" count_in_map="1" count_in_player="0" crafted="0" deloot="0"/>
+        <category name="tools"/>
+        <tag name="shelves"/>
+        <usage name="Medic"/>
+    </type>
+	<type name="ZenSleep_Empty_Syringe"> <!-- Doesn't spawn - empty/used syringe (for tracking player activity) -->
+        <lifetime>1800</lifetime> <!-- 30 mins -->
+		<flags count_in_cargo="0" count_in_hoarder="0" count_in_map="1" count_in_player="0" crafted="1" deloot="0"/>
+    </type>
+	<type name="ZenSleep_Empty_StimSyringe"> <!-- Doesn't spawn - empty/used syringe (for tracking player activity) -->
+        <lifetime>1800</lifetime> <!-- 30 mins -->
+		<flags count_in_cargo="0" count_in_hoarder="0" count_in_map="1" count_in_player="0" crafted="1" deloot="0"/>
+    </type>
+</types>
