@@ -24,7 +24,9 @@ modded class PlayerBase
 	int m_Tiredness = 0; // Our current 'sleepiness'
 	int m_CurrentYawn = 0; // Used to trigger the yawn black screen effect. If this doesn't match m_LastYawn the blink effect is triggered
 	int m_PlayYawnSound = 0; // Tells the client which yawn sound to play
+	int m_LastYawnSound = -1; // Saves the last yawn sound to prevent playing the same sound in a row
 	int m_PlaySleepSound = 0; // Tells the client which sleep sound to play
+	int m_LastSleepSound = -1; // Saves the last sleep sound to prevent playing the same sound in a row
 	bool m_FallUnconsciousFromTiredness = false; // This triggers the black screen effect if the player is forced uncon from tiredness
 	bool m_IsUnconsciousFromTiredness = false; // This tracks on the server & client if the player is uncon from tiredness
 	bool m_OnlyShowSleepOnInventory = false; // This tracks whether or not to only show the sleep meter while tabbed
@@ -142,7 +144,7 @@ modded class PlayerBase
 	// (Client) Plays a sleep sound
 	void PlaySleepSound(int id)
 	{
-		// play yawn sound
+		// Play sleep sound
 		string soundSetSleep = "sleep" + id.ToString() + "_Male_SoundSet";
 		if (!IsMale())
 			soundSetSleep = "sleep" + id.ToString() + "_Female_SoundSet";
@@ -196,6 +198,14 @@ modded class PlayerBase
 	{
 		m_CantSleep = false;
 		m_SleepingInside = false;
+		m_PlayerRestTick = 0;
+		m_AccumulatedRest = 1;
+		m_TirednessUpdateCountdown = 0;
+		m_SleepAccumulatorModifier = 0;
+		m_RestObjectMaxSleep = 0;
+		m_RestObjectAccelerator = 0;
+		m_RestObjectChecks = 0;
+		m_RestObjectInfluenza = true;
 	}
 
 	// Is the player currently in 'sleep' state?
@@ -226,14 +236,47 @@ modded class PlayerBase
 	void MakeSleepSound()
 	{
 		m_PlaySleepSound = Math.RandomIntInclusive(1, 3); // Play random sleep sound effect out of 3 possible
+		if (m_PlaySleepSound == m_LastSleepSound)
+		{
+			switch (m_LastSleepSound) // If we're playing the same sleep sound as last time, switch it up
+			{
+				case 1:
+					m_PlaySleepSound = 2;
+					break;
+				case 2:
+					m_PlaySleepSound = 3;
+					break;
+				case 3:
+					m_PlaySleepSound = 1;
+					break;
+			}
+		}
+		m_LastSleepSound = m_PlaySleepSound;
 	}
 
 	// (Server) Tells the client to play a yawn sound (and trigger black screen effect)
 	void MakeYawnSound()
 	{
 		m_PlayYawnSound = Math.RandomIntInclusive(1, 3); // Play random yawn sound effect out of 3 possible
+		if (m_PlayYawnSound == m_LastYawnSound)
+		{
+			switch (m_LastYawnSound) // If we're playing the same yawn sound as last time, switch it up
+			{
+				case 1:
+					m_PlayYawnSound = 2;
+					break;
+				case 2:
+					m_PlayYawnSound = 3;
+					break;
+				case 3:
+					m_PlayYawnSound = 1;
+					break;
+			}
+		}
+
+		m_LastYawnSound = m_PlayYawnSound;
 		m_CurrentYawn++;
-		if (m_CurrentYawn > MAX_TIREDNESS) // MAX_TIREDNESS is just a way to cap this int below 1000
+		if (m_CurrentYawn > 3) // 3 is just a way to cap this int below 3 as we only detect a change in its value, the value doesn't matter
 		{
 			m_CurrentYawn = 0;
 		}
@@ -412,14 +455,6 @@ modded class PlayerBase
 
 			if (!IsPlayerSleeping()) // If player is not asleep, stop here and reset relevant sleep-tracking variables.
 			{
-				m_PlayerRestTick = 0;
-				m_AccumulatedRest = 1;
-				m_TirednessUpdateCountdown = 0;
-				m_SleepAccumulatorModifier = 0;
-				m_RestObjectMaxSleep = 0;
-				m_RestObjectAccelerator = 0;
-				m_RestObjectChecks = 0;
-				m_RestObjectInfluenza = true;
 				return;
 			}
 
@@ -484,7 +519,7 @@ modded class PlayerBase
 						}
 
 						// Yes fire inside + heat buff
-						if (GetFireSleepAccelerator() > (((float)GetZenSleepConfig().OutsideFireAcceleratorPercent / 100.0) + 1.0) && m_SleepingInside && m_HasHeatBuffer)
+						if (GetFireSleepAccelerator() > (((float)GetZenSleepConfig().OutsideFireAcceleratorPercent / 100.0) + 1.0) && m_SleepingInside && m_HasHeatBuffer && heatSource)
 						{
 							warmCold = GetZenSleepConfig().Str_RestUpdate4; // and I'm comfortably warm
 						}
@@ -599,7 +634,7 @@ modded class PlayerBase
 			{
 				m_WasSleeping = m_IsSleeping;
 
-				if (m_IsSleeping)
+				if (m_IsSleeping && m_YawnTime <= 0)
 				{
 					m_YawnTime = 0.01; // Close the player's eyes
 				}
@@ -671,9 +706,6 @@ modded class PlayerBase
 			// Wait in darkness or fall asleep
 			if (m_FallUnconsciousFromTiredness)
 			{
-				// Client side
-				//m_FallUnconsciousFromTiredness = false; // TODO: Is this necessary? (update: I don't think so - removed for now but left here just in case it breaks something)
-
 				// Notify server that player is allowed to fall asleep
 				SendAllowUnconsciousFromTiredness();
 			}
@@ -714,7 +746,9 @@ modded class PlayerBase
 
 	void SetPlayerUncon()
 	{
-		// We are allowed to fall asleep
+		// We are allowed to fall asleep from unconsciousness
+		ResetSleep();
+		CheckIfPlayerIsInside();
 		m_FallUnconsciousFromTiredness = false;
 		GiveShock(-100);
 

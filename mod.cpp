@@ -7,4 +7,4 @@ tooltip = "Zenarchist's Sleep Mod"; // tool tip on mouse hover
 overview = "Adds immersive sleeping features to the game."; // overview
 action = "https://zenarchist.io/"; // link
 author = "Zenarchist"; // author
-version = "1.0"; // version
+version = "1.01"; // version

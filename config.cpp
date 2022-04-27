@@ -39,6 +39,7 @@ class CfgMods
 		version="1.0";
 		extra=0;
 		type="mod";
+		inputs = "ZenSleep/data/inputs.xml";
 		dependencies[]=
 		{
 			"Game",

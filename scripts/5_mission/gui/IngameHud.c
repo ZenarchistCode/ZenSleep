@@ -6,12 +6,6 @@ modded class IngameHud
 	Widget m_TirednessIconPanel = NULL;
 	Widget m_TirednessBarPanel = NULL;
 	Widget m_SleepModLayout = NULL;
-	// Vanilla hud items (referenced for hiding them while sleeping)
-	Widget m_ActionsPanel = NULL;
-	Widget m_Item = null;
-
-	Widget m_ItemActions = NULL;
-	Widget m_ActionTarget = NULL;
 
 	override void Init(Widget hud_panel_widget)
 	{
@@ -22,9 +16,6 @@ modded class IngameHud
 		m_Tiredness = m_SleepModLayout.FindAnyWidget("SleepBar");
 		m_TirednessIconPanel = m_SleepModLayout.FindAnyWidget("SleepIconPanel");
 		m_TirednessBarPanel = m_SleepModLayout.FindAnyWidget("SleepBarPanel");
-		// Vanilla hud items (referenced for hiding them while sleeping)
-		m_ItemActions = m_HudPanelWidget.FindAnyWidget("ItemActions");
-		m_ActionTarget = m_HudPanelWidget.FindAnyWidget("ActionTargetsCursorWidget");
 
 		if (!m_Tiredness || !m_TirednessIconPanel || !m_TirednessBarPanel)
 		{

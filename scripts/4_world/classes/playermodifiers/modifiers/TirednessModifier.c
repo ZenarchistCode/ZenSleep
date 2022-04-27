@@ -4,6 +4,7 @@ class TirednessModifier: ModifierBase
 	private bool m_SentUnconMessageLastUpdate = false;
 	private float m_TirednessThreshold = -1;
 	private float m_UnconThreshold = -1;
+	private int m_UpdatesSinceLastYawn = 2; // I set this to initialize at 2 because otherwise using the sleep syringe on a fully awake player won't play the yawn sound
 
 	override void Init()
 	{
@@ -29,14 +30,26 @@ class TirednessModifier: ModifierBase
 	{
 		float tiredness = player.GetSingleAgentCount(ZenSleep_Agents.TIREDNESS);
 
+		// If we are fully rested 100%, add some tiredness and stop here
 		if (tiredness == 0)
 		{
 			player.InsertAgent(ZenSleep_Agents.TIREDNESS, 1);
 			return;
 		}
 
+		// If the player is asleep or unconscious, stop here
 		if (player.IsPlayerSleeping() || player.IsUnconscious())
 		{
+			return;
+		}
+
+		// Check if player is beyond their tiredness threshold and if they're not tired enough for yawning or uncon, stop here.
+		if (tiredness < m_TirednessThreshold)
+		{
+			//if (GetZenSleepConfig().DebugOn)
+			//{
+			//	player.SendMessage("Yawn/Uncon: N/A, not tired enough");
+			//}
 			return;
 		}
 
@@ -49,13 +62,13 @@ class TirednessModifier: ModifierBase
 			tiredDepthPenalty = tiredDepthStep / 100; // With the default settings this means: Convert increments of > 50 steps past 800 tiredness into +1% chance of yawn and +0.5% chance of uncon
 		}
 
+		// Calculate percentage chances of yawning & falling uncon
 		float yawnChance = GetZenSleepConfig().YawnPercentChance + tiredDepthPenalty;
 		float unconChance = GetZenSleepConfig().UnconPercentChance + (tiredDepthPenalty / 2.0);
-
 		float rand = Math.RandomFloat01();
-		bool fallUnconscious = tiredness >= m_UnconThreshold && rand <= unconChance;
+		bool fallUnconscious = tiredness >= m_UnconThreshold && rand <= unconChance && (!GetZenSleepConfig().CanUnconInVehicle || !player.IsInVehicle());
 
-		// Player is max tired
+		// Player is max tired, set them uncon
 		if (tiredness >= PluginTransmissionAgents.GetAgentMaxCount(ZenSleep_Agents.TIREDNESS))
 		{
 			fallUnconscious = true;
@@ -75,21 +88,16 @@ class TirednessModifier: ModifierBase
 			}
 		}
 
-		// If config has disabled falling uncon in a vehicle and player is in a vehicle, override fallUnconscious
-		if (fallUnconscious && player.IsInVehicle() && !GetZenSleepConfig().CanUnconInVehicle)
+		// If random trigger, or player is falling uncon, or it's been > 100 updates since our last yawn, play a yawn. 
+		// But don't play the sound if player.m_FallUnconsciousFromTiredness is already true or we yawned last update (prevents playing lots of yawns in a row).
+		if ((rand <= GetZenSleepConfig().YawnPercentChance || fallUnconscious || m_UpdatesSinceLastYawn >= 100) && !player.m_FallUnconsciousFromTiredness && m_UpdatesSinceLastYawn > 1)
 		{
-			fallUnconscious = false;
+			player.MakeYawnSound();
+			m_UpdatesSinceLastYawn = 0;
 		}
-
-		if (tiredness >= m_TirednessThreshold || fallUnconscious)
+		else
 		{
-			// If random trigger, or player is falling uncon, play a yawn. 
-			// But don't play the sound if player.m_FallUnconsciousFromTiredness is already true (prevents playing lots of yawns in a row).
-			if ((rand <= GetZenSleepConfig().YawnPercentChance || fallUnconscious || tiredness == m_TirednessThreshold) && !player.m_FallUnconsciousFromTiredness)
-			{
-				// TODO: Make it so two of the same yawn can't play in a row (immersive-breaking)?
-				player.MakeYawnSound();
-			}
+			m_UpdatesSinceLastYawn++;
 		}
 
 		if (fallUnconscious)
@@ -111,13 +119,9 @@ class TirednessModifier: ModifierBase
 		if (GetZenSleepConfig().DebugOn)
 		{
 			string debugStr = "";
-			if (tiredness < m_TirednessThreshold)
+			if (tiredness >= m_TirednessThreshold)
 			{
-				debugStr = " Yawn/Uncon N/A";
-			}
-			else
-			{
-				debugStr = " | tiredDepthPenalty=" + tiredDepthPenalty + " | yawnChance=" + yawnChance + " | unconChance=" + unconChance + " | rand=" + rand + " yawn=" + (rand <= yawnChance) + " uncon=" + fallUnconscious + " m_FallUnconsciousFromTiredness=" + player.m_FallUnconsciousFromTiredness;
+				debugStr = " | tiredDepthPenalty=" + tiredDepthPenalty + " | yawnChance=" + yawnChance + " | unconChance=" + unconChance + " | rand=" + rand + " yawn=" + (rand <= yawnChance) + " uncon=" + fallUnconscious + " FallUncon=" + player.m_FallUnconsciousFromTiredness + " LastYawn=" + m_UpdatesSinceLastYawn + "/100 updates";
 			}
 
 			player.SendMessage("Tiredness=" + tiredness + debugStr);

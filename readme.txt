@@ -178,3 +178,12 @@ In the same spirit I have the same policy, except you don't need to credit me as
 Enjoy! I hope you guys have as much fun sleeping in the wilderness by a fire as I did when I first discovered Lucian's Medical Attention mod :)
 
 I still remember the time I was cutting a bush to make a fire as my character was yawning his head off, and I randomly fell unconscious and was shot to death by an opportunistic player who was watching me from afar. Talk about immersion!
+
+--------------------------------------------------
+CHANGELOG:
+--------------------------------------------------
+27th April 2022:
+- Improved tiredness modifier to improve efficiency
+- Made it so the same yawn and sleep sound can't play in a row
+- Improved text notifications for how warm the player is
+- Accidentally uploaded first version with 2/3 same male yawn sounds (fixed)
