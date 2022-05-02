@@ -19,6 +19,8 @@ modded class PlayerBase
 	bool m_RestObjectInfluenza = true; // Whether or not you can catch influenza while sleeping in the current nearby rest object
 
 	// Client & server sync variables
+	bool m_OnlyBlurScreen = false; // If true, then when the player is sleeping their screen will blur instead of going black
+	bool m_AllowInventoryWhileSleep = false; // Whether or not the player is permitted to access their inventory while sleeping
 	int m_OnlyShowSleepAbovePercent = 0; // From ZenConfig: Sets what sleep level to show the sleep meter at (optional - 0 = disabled)
 	int m_SleepState; // Stores various sync settings related to this mod
 	int m_Tiredness = 0; // Our current 'sleepiness'
@@ -31,6 +33,8 @@ modded class PlayerBase
 	bool m_IsUnconsciousFromTiredness = false; // This tracks on the server & client if the player is uncon from tiredness
 	bool m_OnlyShowSleepOnInventory = false; // This tracks whether or not to only show the sleep meter while tabbed
 	bool m_HideHudWhileSleeping = true; // Hide the left-hand HUD while sleeping?
+	float m_TirednessHudX = 100.0; // Tiredness GUI HUD x position (needs server-side instructions to move it)
+	float m_TirednessHudY = 100.0; // Tiredness GUI HUD y position (needs server-side instructions to move it)
 
 	// Client-side & server-side no sync variables
 	bool m_WasSleeping = false; // Tracks the player's sleep state to enable/disable the black screen
@@ -44,14 +48,14 @@ modded class PlayerBase
 	EffectSound yawnSoundEffect = NULL; // Used for playing the yawn sounds
 	EffectSound sleepSoundEffect = NULL; // Used for playing the sleep sounds
 
-	// Test to stop too many yawns in a row
-	int UpdatesSinceLastYawn = 3;
+	// RPC variables (Client-side & server-side)
+	bool m_ReceivedSleepData = false;
 
 	// Create player
 	void PlayerBase() { }
 
 	// Print a debug message (client-only)
-	void DebugMessage(string message)
+	void ZS_DebugMessage(string message)
 	{
 		if (GetGame().GetPlayer())
 		{
@@ -59,8 +63,8 @@ modded class PlayerBase
 		}
 	}
 
-	// Sends a text message to the client
-	void SendMessage(string message)
+	// Sends a text message to the client (ZS_ to prevent conflicts with other mods that might use the same method name)
+	void ZS_SendMessage(string message)
 	{
 		Param1<string> m_MessageParam = new Param1<string>("");
 		if (GetGame().IsServer() && m_MessageParam && IsAlive() && message != "")
@@ -81,7 +85,6 @@ modded class PlayerBase
 		RegisterNetSyncVariableInt("m_SleepState");
 		RegisterNetSyncVariableInt("m_PlayYawnSound");
 		RegisterNetSyncVariableInt("m_PlaySleepSound");
-		RegisterNetSyncVariableInt("m_OnlyShowSleepAbovePercent");
 
 		// Prepare player status plugin
 		m_Mod_ModulePlayerStatus = PluginPlayerStatus.Cast(GetPlugin(PluginPlayerStatus));
@@ -92,14 +95,63 @@ modded class PlayerBase
 	{
 		super.OnConnect();
 
-		// Set client-side config from server
+		if (GetGame().IsServer())
+		{
+			// Set client-side config from server
+			LoadServerConfig();
+
+			// Update client
+			ZenSleep_SyncState();
+			ScheduleSleepDataUpdate(false);
+		}
+	}
+
+	// (Server-side) Sets the server-side settings that the player client must sync
+	void LoadServerConfig()
+	{
+		// Bools
 		m_OnlyShowSleepOnInventory = GetZenSleepConfig().OnlyShowSleepOnInventory;
-		m_OnlyShowSleepAbovePercent = GetZenSleepConfig().OnlyShowSleepAbovePercent;
 		m_HideHudWhileSleeping = GetZenSleepConfig().HideHudWhileSleeping;
 		m_AllowInventoryWhileSleep = GetZenSleepConfig().AllowInventoryWhileSleep;
+		m_OnlyBlurScreen = GetZenSleepConfig().SleepBlackScreen == 2;
 
-		// Update client
-		ZenSleep_SyncState();
+		// Ints
+		m_OnlyShowSleepAbovePercent = GetZenSleepConfig().OnlyShowSleepAbovePercent;
+
+		// Floats
+		m_TirednessHudX = GetZenSleepConfig().TirednessHudX;
+		m_TirednessHudY = GetZenSleepConfig().TirednessHudY;
+	}
+
+	// (Server-side) Queue repetitive sending of server-side settings to ensure the data gets sent every 5 secs until it's confirmed it was received
+	void ScheduleSleepDataUpdate(bool sendImmediately)
+	{
+		if (sendImmediately) // This is only true if the player is a server admin and has requested a re-load of the json config
+		{
+			LoadServerConfig();
+			SendSleepDataToClient();
+		}
+
+		GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(SendSleepDataToClient, 5000, true);
+	}
+
+	// (Server-side) Sends an RPC containing all of the server-side sleep config settings that the client needs to be aware of
+	void SendSleepDataToClient()
+	{
+		if (!m_ReceivedSleepData) // If the player has not yet received the server-side config setting data, send it
+		{
+			GetRPCManager().SendRPC("ZS_RPC", "RPC_SendSleepDataToClient", new Param7< bool, bool, bool, bool, int, float, float >(m_OnlyShowSleepOnInventory, m_HideHudWhileSleeping, m_AllowInventoryWhileSleep, m_OnlyBlurScreen, m_OnlyShowSleepAbovePercent, m_TirednessHudX, m_TirednessHudY), true, this.GetIdentity());
+		}
+		else // Otherwise, if the client has confirmed that they've received it, stop repeatedly sending it.
+		{
+			GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).Remove(this.SendSleepDataToClient);
+		}
+	}
+
+	// (Client-side) Sends an RPC requesting the server to reload the ZenSleep config
+	void RequestServerConfigReload()
+	{
+		GetRPCManager().SendRPC("ZS_RPC", "RPC_SendReloadConfigRequestToServer", new Param1< PlayerBase >(this), true, NULL);
 	}
 
 	// Triggered when variables are synchronized from the server to the client
@@ -109,7 +161,7 @@ modded class PlayerBase
 		ZenSleep_ReadState();
 
 		// Debug message
-		//DebugMessage("Sleeping=" + m_IsSleeping + " YawnSound=" + m_PlayYawnSound + " SleepSound=" + m_PlaySleepSound + " CurrentYawn=" + m_CurrentYawn + " FallUnconsciousFromTiredness=" + m_FallUnconsciousFromTiredness);
+		//ZS_DebugMessage("Sleeping=" + m_IsSleeping + " YawnSound=" + m_PlayYawnSound + " SleepSound=" + m_PlaySleepSound + " CurrentYawn=" + m_CurrentYawn + " FallUnconsciousFromTiredness=" + m_FallUnconsciousFromTiredness);
 
 		// Check for yawn sound trigger. This plays on ALL player objects, so we need to do the blink effect separately on PlayerRestCheck
 		if (m_PlayYawnSound > 0 && !IsUnconscious()) // If we receive a yawn sound effect ID from server and the player is not uncon, play the sound.
@@ -154,8 +206,7 @@ modded class PlayerBase
 		sleepSoundEffect.SetSoundAutodestroy(true);
 	}
 
-	bool m_AllowInventoryWhileSleep = false;
-	// Sets our sync variables
+	// Sets our sync state variables (server-side & client-side). Uses bitwise operators to be more efficient (from Lucian's original Medical Attention code)
 	void ZenSleep_SetState()
 	{
 		m_SleepState = 0;
@@ -165,15 +216,6 @@ modded class PlayerBase
 
 		if (m_FallUnconsciousFromTiredness)
 			m_SleepState |= ZenSleep_SyncState.FallUnconsciousFromTiredness;
-
-		if (m_OnlyShowSleepOnInventory)
-			m_SleepState |= ZenSleep_SyncState.OnlyShowHudWhileTabbed;
-
-		if (m_HideHudWhileSleeping)
-			m_SleepState |= ZenSleep_SyncState.HideHudWhileSleeping;
-
-		if (m_AllowInventoryWhileSleep)
-			m_SleepState |= ZenSleep_SyncState.AllowInventoryWhileSleep;
 	}
 
 	// (Client) read the state sent from the server
@@ -181,9 +223,6 @@ modded class PlayerBase
 	{
 		m_IsSleeping = (m_SleepState & ZenSleep_SyncState.IsSleeping) != 0;
 		m_FallUnconsciousFromTiredness = (m_SleepState & ZenSleep_SyncState.FallUnconsciousFromTiredness) != 0;
-		m_OnlyShowSleepOnInventory = (m_SleepState & ZenSleep_SyncState.OnlyShowHudWhileTabbed) != 0;
-		m_HideHudWhileSleeping = (m_SleepState & ZenSleep_SyncState.HideHudWhileSleeping) != 0;
-		m_AllowInventoryWhileSleep = (m_SleepState & ZenSleep_SyncState.AllowInventoryWhileSleep) != 0;
 	}
 
 	// Sync's the client to the server
@@ -206,6 +245,12 @@ modded class PlayerBase
 		m_RestObjectAccelerator = 0;
 		m_RestObjectChecks = 0;
 		m_RestObjectInfluenza = true;
+	}
+
+	// Returns how tired the player currently is (as a percentage between 0.0-100.0%)
+	float GetTiredPercent()
+	{
+		return ((float)m_Tiredness / (float)MAX_TIREDNESS) * 100.0;
 	}
 
 	// Is the player currently in 'sleep' state?
@@ -295,7 +340,7 @@ modded class PlayerBase
 				msg = GetZenSleepConfig().Str_ITooTired3; // "I don't have much energy... I should lie down soon and get some rest."
 			}
 
-			SendMessage(msg);
+			ZS_SendMessage(msg);
 		}
 	}
 
@@ -337,6 +382,11 @@ modded class PlayerBase
 	// Returns the standard sleep accelerator modifier based on the player's current environment
 	float GetFireSleepAccelerator()
 	{
+		if (GetStatWet().Get() == GetZenSleepConfig().WetnessCancelsFireAccelerator)
+		{
+			return GetZenSleepConfig().BaseSleepAccelerator; // Fire acceleration buff doesn't count while wet
+		}
+
 		if (m_SleepingInside) // If player is inside a building (or a medium tent)
 		{
 			if (m_Environment.GetTemperature() >= (float)GetZenSleepConfig().InsideFireTemp || (m_HasHeatBuffer && GetZenSleepConfig().HeatBuffCountsAsFire)) // Fire detected
@@ -354,7 +404,7 @@ modded class PlayerBase
 			}
 		}
 
-		return 1.0; // No fire or building detected, no sleep accelerator.
+		return GetZenSleepConfig().BaseSleepAccelerator; // No fire or building detected, no sleep accelerator.
 	}
 
 	// Check for nearby objects in the config list, and apply the rest accelerator.
@@ -388,7 +438,7 @@ modded class PlayerBase
 
 						if (fire)
 						{
-							SendMessage("Fireplace detected, burning=" + fire.IsBurning());
+							ZS_SendMessage("Fireplace detected, burning=" + fire.IsBurning());
 						}
 					}
 				}*/
@@ -414,7 +464,7 @@ modded class PlayerBase
 					{ // Apply highest sleep accelerator if multiple objects are found
 						m_RestObjectAccelerator = ro.SleepAcceleratorPercent / 100;
 						m_RestObjectInfluenza = ro.Influenza;
-						if (GetGame().GetWorld().IsNight())
+						if (Zen_IsNightTime())
 						{
 							m_RestObjectMaxSleep = ro.MaxRestNight;
 						}
@@ -425,7 +475,7 @@ modded class PlayerBase
 
 						if (GetZenSleepConfig().DebugOn)
 						{
-							SendMessage("Found nearby rest object: " + ro.ObjectType + " - MaxRestDay=" + ro.MaxRestDay + "% SleepAccelerator=" + ro.SleepAcceleratorPercent + "%");
+							ZS_SendMessage("Found nearby rest object: " + ro.ObjectType + " - MaxRestDay=" + ro.MaxRestDay + "% SleepAccelerator=" + ro.SleepAcceleratorPercent + "%");
 						}
 					}
 				}
@@ -451,6 +501,7 @@ modded class PlayerBase
 			if (IsUnconscious())
 			{
 				m_FallUnconsciousFromTiredness = false;
+
 			}
 
 			if (!IsPlayerSleeping()) // If player is not asleep, stop here and reset relevant sleep-tracking variables.
@@ -469,8 +520,13 @@ modded class PlayerBase
 			// If we've been asleep for at least 30 seconds, check if we should play a random sleep sound and increase sleep accelerator
 			if (m_AccumulatedRest > 1 + REST_GAIN_PER_SEC * 30)
 			{
-				m_SleepAccumulatorModifier += GetZenSleepConfig().AsleepAccelerator;
-				restAccelerator += m_SleepAccumulatorModifier;
+
+				if (GetZenSleepConfig().WetnessCancelsFireAccelerator && GetStatWet().Get() <= 0) // If player is wet, don't sleep any faster
+				{
+					m_SleepAccumulatorModifier += GetZenSleepConfig().AsleepAccelerator;
+					restAccelerator += m_SleepAccumulatorModifier;
+				}
+
 				if (Math.RandomFloat01() <= GetZenSleepConfig().SleepSoundPercentChance)
 				{
 					MakeSleepSound();
@@ -481,15 +537,20 @@ modded class PlayerBase
 				{
 					float randFlu = (float)Math.RandomIntInclusive(0, GetZenSleepConfig().InfluenzaInjectNoFire);
 
-					if (GetGame().GetWorld().IsNight())
+					if (Zen_IsNightTime())
 					{
-						randFlu *= 1.5; // If it's night time increase influenza infection by 50%
+						randFlu *= GetZenSleepConfig().InfluenzaMultiplierNightNoFire; // If it's night time increase influenza infection by 50%
+					}
+
+					if (GetStatWet().Get() == GetZenSleepConfig().WetnessCancelsFireAccelerator)
+					{
+						randFlu *= GetZenSleepConfig().InfluenzaMultiplierWetNoFire; // If we're wet, increase influenza infection by 100%
 					}
 
 					InsertAgent(eAgents.INFLUENZA, randFlu);
 					if (GetZenSleepConfig().DebugOn)
 					{
-						SendMessage("Injected with influenza for no fire: " + randFlu + "/" + GetZenSleepConfig().InfluenzaInjectNoFire + " (" + GetSingleAgentCount(eAgents.INFLUENZA) + "/1000)");
+						ZS_SendMessage("Injected with influenza for no fire: " + randFlu + "/" + GetZenSleepConfig().InfluenzaInjectNoFire + " (" + GetSingleAgentCount(eAgents.INFLUENZA) + "/1000)");
 					}
 				}
 			}
@@ -517,6 +578,10 @@ modded class PlayerBase
 						{
 							warmCold = GetZenSleepConfig().Str_RestUpdate3; // and I'm warm
 						}
+						if (GetStatWet().Get() == GetZenSleepConfig().WetnessCancelsFireAccelerator)
+						{
+							warmCold = GetZenSleepConfig().Str_RestUpdate5; // and my clothes are wet.
+						}
 
 						// Yes fire inside + heat buff
 						if (GetFireSleepAccelerator() > (((float)GetZenSleepConfig().OutsideFireAcceleratorPercent / 100.0) + 1.0) && m_SleepingInside && m_HasHeatBuffer && heatSource)
@@ -524,7 +589,7 @@ modded class PlayerBase
 							warmCold = GetZenSleepConfig().Str_RestUpdate4; // and I'm comfortably warm
 						}
 
-						SendMessage(GetZenSleepConfig().Str_RestUpdate + " " + restPercent.ToString() + "% " + warmCold); // My rest level is x% and I'm warm/cold
+						ZS_SendMessage(GetZenSleepConfig().Str_RestUpdate + " " + restPercent.ToString() + "% " + warmCold); // My rest level is x% and I'm warm/cold
 					}
 				}
 			}
@@ -532,17 +597,35 @@ modded class PlayerBase
 			// Debug message for dev purposes
 			if (GetZenSleepConfig().DebugOn)
 			{
-				string debugStr = "HeatSource=" + heatSource + " Temp=" + m_Environment.GetTemperature() + " IsNight=" + GetGame().GetWorld().IsNight() + " Inside=" + m_SleepingInside + " RestAcc=" + restAccelerator + " RestAccum=" + m_SleepAccumulatorModifier;
-				SendMessage("My rest level is " + restPercent.ToString() + "% - " + debugStr);
+				string debugStr = "HeatSource=" + heatSource + " Temp=" + m_Environment.GetTemperature() + " IsNight=" + Zen_IsNightTime() + " Inside=" + m_SleepingInside + " RestAcc=" + restAccelerator + " RestAccum=" + m_SleepAccumulatorModifier + " Wet=" + GetStatWet().Get();
+				ZS_SendMessage("My rest level is " + restPercent.ToString() + "% - " + debugStr);
 			}
 
 			if (!m_IsUnconscious) // Don't send sleep text updates if we're unconscious
 			{
 				float maxRest = 100.0; // Limit our rest to this variable value based on various factors
 				string msg = ""; // Text message to update the player with
-				if (GetGame().GetWorld().IsNight()) // Check night time rest limits
+
+				// Player is sleeping at night time
+				if (Zen_IsNightTime())
 				{
-					if (!heatSource) // With no fire
+					// And player is wet and a max rest limit is set for wet players
+					if (GetZenSleepConfig().MaxRestWhenWetNight < 100 && GetStatWet().Get() > 0)
+					{
+						if (restPercent >= GetZenSleepConfig().MaxRestWhenWetNight)
+						{
+							if (GetZenSleepConfig().TextNotificationOn)
+							{
+								msg = GetZenSleepConfig().Str_CantSleep5; // "I don't think I can sleep any longer, my clothes are wet and I'm uncomfortable..."
+								ZS_SendMessage(msg);
+							}
+
+							m_CantSleep = true;
+							return;
+						}
+					}
+
+					if (!heatSource) // And there is no fire nearby
 					{
 						maxRest = Math.Max(GetZenSleepConfig().MaxRestNightNoFire, m_RestObjectMaxSleep);
 						if (restPercent >= maxRest && m_RestObjectChecks >= 1)
@@ -552,14 +635,14 @@ modded class PlayerBase
 								msg = GetZenSleepConfig().Str_CantSleep1; // "I don't think I can sleep any longer..."
 								if (restPercent < 100.0)
 									msg = GetZenSleepConfig().Str_CantSleep2; // "I don't think I can sleep any longer, I'm too cold..."
-								SendMessage(msg);
+								ZS_SendMessage(msg);
 							}
 
 							m_CantSleep = true;
 							return;
 						}
 					}
-					else // With a fire
+					else // And there is a fire nearby
 					{
 						maxRest = Math.Max(GetZenSleepConfig().MaxRestNightWithFire, m_RestObjectMaxSleep);
 						if (restPercent >= maxRest && m_RestObjectChecks >= 1)
@@ -569,7 +652,7 @@ modded class PlayerBase
 								msg = GetZenSleepConfig().Str_CantSleep1; // "I don't think I can sleep any longer..."
 								if (restPercent < 100.0)
 									msg = GetZenSleepConfig().Str_CantSleep2; // "I don't think I can sleep any longer, I'm too cold..."
-								SendMessage(msg);
+								ZS_SendMessage(msg);
 							}
 
 							m_CantSleep = true;
@@ -579,28 +662,44 @@ modded class PlayerBase
 				}
 				else // Check day time rest limits
 				{
-					if (!heatSource) // With no fire
+					// And player is wet and a max rest limit is set for wet players
+					if (GetZenSleepConfig().MaxRestWhenWetDay < 100 && GetStatWet().Get() > 0)
 					{
-						maxRest = Math.Max(GetZenSleepConfig().MaxRestDayNoFire, m_RestObjectMaxSleep);
-						if (restPercent >= maxRest && m_RestObjectChecks >= 1)
+						if (restPercent >= GetZenSleepConfig().MaxRestWhenWetDay)
 						{
 							if (GetZenSleepConfig().TextNotificationOn)
 							{
-								SendMessage(GetZenSleepConfig().Str_CantSleep3); // "I don't think I can sleep any longer, it's too bright and I'm cold..."
+								msg = GetZenSleepConfig().Str_CantSleep5; // "I don't think I can sleep any longer, my clothes are wet and I'm uncomfortable..."
+								ZS_SendMessage(msg);
 							}
 
 							m_CantSleep = true;
 							return;
 						}
 					}
-					else // With a fire
+
+					if (!heatSource) // And there is no fire nearby
+					{
+						maxRest = Math.Max(GetZenSleepConfig().MaxRestDayNoFire, m_RestObjectMaxSleep);
+						if (restPercent >= maxRest && m_RestObjectChecks >= 1)
+						{
+							if (GetZenSleepConfig().TextNotificationOn)
+							{
+								ZS_SendMessage(GetZenSleepConfig().Str_CantSleep3); // "I don't think I can sleep any longer, it's too bright and I'm cold..."
+							}
+
+							m_CantSleep = true;
+							return;
+						}
+					}
+					else // And there is a fire nearby
 					{
 						maxRest = Math.Max(GetZenSleepConfig().MaxRestDayWithFire, m_RestObjectMaxSleep);
 						if (restPercent >= maxRest && m_RestObjectChecks >= 1)
 						{
 							if (GetZenSleepConfig().TextNotificationOn)
 							{
-								SendMessage(GetZenSleepConfig().Str_CantSleep4); // "I don't think I can sleep any longer, it's too bright..."
+								ZS_SendMessage(GetZenSleepConfig().Str_CantSleep4); // "I don't think I can sleep any longer, it's too bright..."
 							}
 
 							m_CantSleep = true;
@@ -645,6 +744,46 @@ modded class PlayerBase
 		}
 
 		m_PlayerRestTick = 0; // Reset player rest tick counter (prevents checks being made unnecessarily often)
+	}
+
+	// Checks if it is currently night time (adapted from PvZmoD night time checker code - credit to Liven! (https://steamcommunity.com/sharedfiles/filedetails/?id=2051775667)
+	bool Zen_IsNightTime()
+	{
+		// If config for night-time override is not set, just use the default DayZ night time check
+		if (GetZenSleepConfig().NightTimeStartHour == 0 && GetZenSleepConfig().NightTimeStartMin == 0 && GetZenSleepConfig().NightTimeEndHour == 0 && GetZenSleepConfig().NightTimeEndMin == 0)
+		{
+			return GetGame().GetWorld().IsNight();
+		}
+
+		bool isNight = false;
+		int day, month, year, hour, minute;
+		GetGame().GetWorld().GetDate(year, month, day, hour, minute);
+
+		if (GetZenSleepConfig().NightTimeStartHour > GetZenSleepConfig().NightTimeEndHour || (GetZenSleepConfig().NightTimeStartHour == GetZenSleepConfig().NightTimeEndHour && GetZenSleepConfig().NightTimeStartMin < GetZenSleepConfig().NightTimeEndMin))
+		{
+			if (hour > GetZenSleepConfig().NightTimeStartHour || (hour == GetZenSleepConfig().NightTimeStartHour && minute >= GetZenSleepConfig().NightTimeStartMin))
+			{
+				isNight = true;
+			}
+			else 
+			if (hour < GetZenSleepConfig().NightTimeEndHour || (hour == GetZenSleepConfig().NightTimeEndHour && minute <= GetZenSleepConfig().NightTimeEndMin))
+			{
+				isNight = true;
+			}
+		}
+		else 
+		if (GetZenSleepConfig().NightTimeStartHour < GetZenSleepConfig().NightTimeEndHour || (GetZenSleepConfig().NightTimeStartHour == GetZenSleepConfig().NightTimeEndHour && GetZenSleepConfig().NightTimeStartMin < GetZenSleepConfig().NightTimeEndMin))
+		{
+			if (hour > GetZenSleepConfig().NightTimeStartHour || (hour == GetZenSleepConfig().NightTimeStartHour && minute >= GetZenSleepConfig().NightTimeStartMin))
+			{
+				if (hour < GetZenSleepConfig().NightTimeEndHour || (hour == GetZenSleepConfig().NightTimeEndHour && minute <= GetZenSleepConfig().NightTimeEndMin))
+				{
+					isNight = true;
+				}
+			}
+		}
+
+		return isNight;
 	}
 
 	// Cancels the sleep state
@@ -737,14 +876,15 @@ modded class PlayerBase
 				// Server-side
 				if (m_FallUnconsciousFromTiredness)
 				{
-					SetPlayerUncon();
+					Zen_SetPlayerUncon();
 				}
 
 				break;
 		}
 	}
 
-	void SetPlayerUncon()
+	// Sets the player unconscious
+	void Zen_SetPlayerUncon()
 	{
 		// We are allowed to fall asleep from unconsciousness
 		ResetSleep();
@@ -805,6 +945,12 @@ modded class PlayerBase
 			float blur = val * 0.2;
 			float vignette = val;
 			float color_overlay_factor = val * 0.16;
+
+			if (m_OnlyBlurScreen && IsPlayerSleeping()) // Overrides black screen effect if blur config setting is turned on
+			{
+				vignette = 0;
+				color_overlay_factor = 0;
+			}
 
 			auto requester = PPERequester_SleepEffect.Cast(PPERequesterBank.GetRequester(PPERequester_SleepEffect));
 			requester.ZS_SetEffectValues(blur, vignette, color_overlay_factor);

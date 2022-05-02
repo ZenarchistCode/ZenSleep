@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<modded_inputs>
+	<inputs>
+		<actions>
+			<input name="ZenSleep_SleepKey" loc="#ZenSleep_SleepKey_Txt" />
+			<input name="ZenSleep_RefreshConfig" loc="#ZenSleep_RefreshConfig_Txt" />
+		</actions>
+	</inputs>
+    <preset>
+		<input name="ZenSleep_SleepKey">
+            <btn name="kP"/>
+        </input>
+		<input name="ZenSleep_RefreshConfig">
+            <btn name="kNumpad3"/>
+        </input>
+    </preset>
+</modded_inputs>

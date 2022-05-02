@@ -17,7 +17,7 @@ modded class ActionConsume : ActionContinuousBase
 
 				if (GetZenSleepConfig().DebugOn)
 				{
-					action_data.m_Player.SendMessage("Giving energy: " + replenish);
+					action_data.m_Player.ZS_SendMessage("Giving energy: " + replenish);
 				}
 			}
 		}

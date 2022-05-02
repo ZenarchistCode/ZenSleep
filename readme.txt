@@ -114,39 +114,85 @@ Note: This feature is still in development and doesn't work 100% of the time on 
 - MediumTent: Max rest during the day with no fire is 60%, you sleep 10% faster and no chance of influenza regardless of fire status.
 
 Default Mod Settings That Can Be Tweaked/Enabled/Disabled:
+
+######################################################################
+MAIN CONFIG
+######################################################################
 [MaxWakeTime=240] Maximum time the player can stay awake before they are forced uncon (in minutes - 4 hours by default)
 [AllowInventoryWhileSleep=false] Allows the player to access their inventory while sleeping (they can only move things around and can't put items into their hands)
 [CanUnconInVehicle=true] Whether or not players can fall asleep while driving
-[SleepBlackScreen=true] Screen turns black when sleeping
+[SleepBlackScreen=1] Screen turns black or blurry when sleeping (0 = off, 1 = black, 2 = blurry)
 [TextNotificationOn=true] Text notifications to update the player's sleep status
 [TextNotificationFrequency=5] How often to send text updates while sleeping (every 5 rest ticks or 15 secs by default).
+[HideHudWhileSleeping=true] Whether or not to hide parts of the HUD while sleeping (item in hands, stamina meter etc)
 [OnlyShowSleepOnInventory=false] Only show tiredness meter when tabbed and in the inventory
 [OnlyShowSleepAbovePercent=off] Only show tiredness meter when tiredness is over a certain % (0-100)
+######################################################################
+RANDOM CHANCE CONFIG
+######################################################################
 [SleepSoundPercentChance=8%] Percent chance to play a sleeping sound while the player is tired (0 to disable)
 [YawnPercentStart=20%] The tiredness % level when random yawning can start to happen (to notify player they need to sleep soon)
 [YawnPercentChance=6.5%] The base chance of playing a yawn sound when tiredness is over YawnPercentStart (slowly increases the more tired they are)
 [UnconPercentStart=10%] The tiredness % level when the player can start to randomly fall unconscious
 [UnconPercentChance=1%] The base chance of falling uncon when tiredness is over UnconPercentStart (slowly increases the more tired they are)
+######################################################################
+INFLUENZA CONFIG
+######################################################################
 [InfluenzaInjectNoFire=5] How much influenza to inject the player with when sleeping without a fire (random between 0 and this value - 1000 = max influenza)
+[InfluenzaMultiplierNightNoFire=1.5] Multiplies InfluenzaInjectNoFire value when sleeping at night without a fire
+[InfluenzaMultiplierWetNoFire] Multiplies InfluenzaInjectNoFire value when sleeping at night without a fire and with wet clothes
+######################################################################
+MAX REST CONFIG
+######################################################################
 [MaxRestDayNoFire=50%] Maximum achievable rest when sleeping during the day with no fire
 [MaxRestDayWithFire=75%] Maximum achievable rest when sleeping during the day with a fire
 [MaxRestNightNoFire=80%] Maximum achievable rest when sleeping during the night with no fire
-[MaxRestNightWithFire=100%] Maximum achievable rest when sleeping during the night with a fire
+[MaxRestNightWithFire=100%] Maximum achievable rest % when sleeping during the night with a fire
+[MaxRestWhenWetDay=40] Maximum achievable rest % when sleeping with wet clothes during the day (regardless of fire)
+[MaxRestWhenWetNight=75] Maximum achievable rest % when sleeping with wet clothes during the night (regardless of fire)
+######################################################################
+TEMPERATURE CONFIG
+######################################################################
 [HeatBuffCountsAsFire=false] If enabled then having the heat buff is equivalent to sleeping next to a fire and will apply sleep accelerators.
 [OutsideFireTemp=28] How hot a fire typically is when lit outside (this varies depending on the map & weather - use debug mode on a private server to adjust)
 [InsideFireTemp=38] How hot a fire typically is when lit inside (this varies depending on the map & weather - use debug mode on a private server to adjust)
+######################################################################
+SLEEP ACCELERATOR CONFIG
+######################################################################
+[WetnessCancelsFireAccelerator=true] If player has wet clothes, don't give them any rest buffs (set to 0 to disable)
+[BaseSleepAccelerator=1.0] How fast the player sleeps if no fire or rest object is detected nearby (1x speed by default)
 [AsleepAccelerator=0.01%] Energy recovery speed increases by this value every few seconds while sleeping so the longer you sleep the faster you recover
 [OutsideFireAcceleratorPercent=5%] You recover energy 5% faster when sleeping near a fire outside
 [InsideNoFireAcceleratorPercent=10%] You recover energy 10% faster when sleeping inside a building with no fire nearby
 [InsideFireAcceleratorPercent=25%] You recover energy 25% faster when sleeping inside a building with a fire nearby
+######################################################################
+NIGHT TIME CONFIG
+######################################################################
+[NightTimeStartHour=0] Use this to override the ingame night time detection (24 hour)
+[NightTimeStartMin=0] Use this to override the ingame night time detection (0-59 mins)
+[NightTimeEndHour=0] Use this to override the ingame night time detection (24 hour)
+[NightTimeEndMin=0] Use this to override the ingame night time detection (0-59 mins)
+######################################################################
+ENERGY DRINKS & REST OBJECTS CONFIG
+######################################################################
 [EnergyDrinks] - Configurable (sodas, epi, morphine & PO-X affect energy levels by default)
 [RestObjects] - Configurable (MediumTent makes you sleep 10% faster and protects from influenza by default)
-
+######################################################################
+LANGUAGE CONFIG
+######################################################################
 [Str_XXX] - All the text notifications are configurable in this mod (to make language translations or modifications easier)
-
-[DebugOn=false] - Don't turn this on unless you are trying to figure out why the mod is doing something wrong or tweaking stuff and want debug messages sent to your player.
+######################################################################
+GUI CONFIG
+######################################################################
+[TirednessHudX=0.855] The horizontal X coordinate for the tiredness meter on the ingame HUD (set to 0.0 to move the sleep meter underneath the stamina meter)
+[TirednessHudY=0.03] The vertical Y coordinate for the tiredness meter on the ingame HUD (don't touch this unless you have UI conflicts with other mods)
+######################################################################
+DEBUG CONFIG
+######################################################################
+[AdminSteam64ID] Your Steam 64 ID for your admin account (allows you to reload server config with a hotkey - find your ID at www.steamidfinder.com)
+[DebugOn=0] - Off by default. Set to 1 to receive all debug messages, set to 2 to only receive debug messages while sleeping
 [RestUpdateTick=3] - Don't touch this unless you experience bad performance on high-pop servers. This affects how often all the above values are analyzed (3 secs by default).
-
+######################################################################
 
 Important Notes:
 This mod is still in development and I'm not an experienced modder, so there may be issues with these early builds. Please be patient and also please let me know if you encounter any issues (and ideally as much info about what caused it as possible so I can investigate it and try to recreate it myself).
@@ -177,13 +223,42 @@ In the same spirit I have the same policy, except you don't need to credit me as
 
 Enjoy! I hope you guys have as much fun sleeping in the wilderness by a fire as I did when I first discovered Lucian's Medical Attention mod :)
 
-I still remember the time I was cutting a bush to make a fire as my character was yawning his head off, and I randomly fell unconscious and was shot to death by an opportunistic player who was watching me from afar. Talk about immersion!
+I still remember the time I was cutting a bush to make a fire as my character was yawning his head off, and I randomly fell unconscious and was then shot to death a few seconds later by an opportunistic sniper who must've been watching me from afar. Talk about immersion!
 
---------------------------------------------------
+######################################################################
 CHANGELOG:
---------------------------------------------------
+######################################################################
 27th April 2022:
+----------------------------------------------------------------------
 - Improved tiredness modifier to improve efficiency
 - Made it so the same yawn and sleep sound can't play in a row
 - Improved text notifications for how warm the player is
 - Accidentally uploaded first version with 2/3 same male yawn sounds (fixed)
+----------------------------------------------------------------------
+2nd March 2022:
+----------------------------------------------------------------------
+IMPORTANT PLAYER CHANGES:
+- You can now use the lie-down emote ingame with a hotkey (keybind - P by default)
+- Having wet clothes can now affect how well you rest and whether or not you get infected with influenza while sleeping
+
+IMPORTANT SERVER CHANGES:
+- Changed how the mod sends server-side config data to the client to be more efficient + allow reloading config without restart
+- You can now update your server-side config and reload the settings from the client (keybind - Numpad 3 by default)
+- To authorize your player to send reload commands, make sure to put your Steam 64 ID in the json config (AdminSteamID)
+- Changed SleepBlackScreen to have two options. 0 = off, 1 = Black screen when sleeping, 2 = Blurry screen when sleeping
+- Added NightTimeStartHour, NightTimeStartMin, NightTimeEndHour & NightTimeEndMin config settings - if value is above 0, this overrides night time detection (use 24 hour time)
+- Added TirednessHudX and Y config settings - this can be used to move the tiredness meter to wherever you need it if the default settings conflict with other HUD elements.
+    - Eg. If the default tiredness meter overlays an existing HUD element from another mod, try setting TirednessHudX=0 to move the meter to directly below the stamina bar.
+
+MINOR SERVER CHANGES:
+- Added DebugOn verbosity option (set DebugOn=1 to receive ALL messages, set it to 2 for less detailed messages to prevent cluttering the on-screen text)
+- Added InfluenzaMultiplierNightNoFire config setting (this multiplies InfluenzaInjectNoFire value if sleeping with no fire at night time - set to 1.0 to disable)
+- Added InfluenzaMultiplierWetNoFire config setting (this multiplies InfluenzaInjectNoFire value if sleeping with wet clothes and no fire at night time - set to 1.0 to disable)
+- Added MaxRestWhenWetDay config setting (this sets the max rest % override for sleeping with wet clothes during the day - set to 100 to disable)
+- Added MaxRestWhenWetNight config setting (this sets the max rest % override for sleeping with wet clothes during the night - set to 100 to disable)
+- Added WetnessCancelsFireAccelerator config setting (if player is sleeping with wet clothes, they do not sleep any faster even if a fire is nearby - set to 0 to disable)
+- Added BaseSleepAccelerator config setting (this is how fast the player sleeps if no fire or rest object is nearby - 1.0x by default)
+- Added some new language strings for the new wetness sleeping features (Str_RestUpdate5 & Str_CantSleep5)
+- Added "#define ZenSleep" so that other modders can interact with this mod in their code more easily
+
+To implement all of these changes into your server config, update the mod and then you will need to carefully copy your existing settings into the new JSON file. The new JSON file is included in the mod folder and will also be created automatically if you run your server without an existing one (so if you haven't changed any settings, just delete your existing ZenSleepConfig.json file to apply the new changes).

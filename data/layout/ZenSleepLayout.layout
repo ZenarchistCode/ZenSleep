@@ -7,7 +7,7 @@ FrameWidgetClass HudFrameWidget_Vanilla {
  hexactsize 0
  vexactsize 0
  {
-  PanelWidgetClass HudPanel_Vanilla {
+  PanelWidgetClass HudPanel_Tiredness {
    visible 1
    clipchildren 0
    inheritalpha 0

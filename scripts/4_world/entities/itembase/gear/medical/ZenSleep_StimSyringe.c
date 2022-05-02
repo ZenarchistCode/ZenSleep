@@ -27,7 +27,7 @@ class ZenSleep_StimSyringe : Inventory_Base
 
 		if (GetZenSleepConfig().DebugOn)
 		{
-			player.SendMessage("Giving tiredness penalty: " + penalty);
+			player.ZS_SendMessage("Giving tiredness penalty: " + penalty);
 		}
 
 		player.InsertAgent(ZenSleep_Agents.TIREDNESS, penalty);

@@ -43,13 +43,14 @@ class TirednessModifier: ModifierBase
 			return;
 		}
 
-		// Check if player is beyond their tiredness threshold and if they're not tired enough for yawning or uncon, stop here.
+		// Check if player is beyond their tiredness threshold and if they're not tired enough for yawning or uncon, stop here to prevent unncessary calculations.
 		if (tiredness < m_TirednessThreshold)
 		{
-			//if (GetZenSleepConfig().DebugOn)
-			//{
-			//	player.SendMessage("Yawn/Uncon: N/A, not tired enough");
-			//}
+			if (GetZenSleepConfig().DebugOn == 1)
+			{
+				player.ZS_SendMessage("Yawn/Uncon: N/A, not tired enough");
+			}
+
 			return;
 		}
 
@@ -76,13 +77,13 @@ class TirednessModifier: ModifierBase
 
 			if (GetZenSleepConfig().DebugOn)
 			{
-				player.SendMessage("Fall uncon forced due to tiredness: " + tiredness + "/" + PluginTransmissionAgents.GetAgentMaxCount(ZenSleep_Agents.TIREDNESS));
+				player.ZS_SendMessage("Fall uncon forced due to tiredness: " + tiredness + "/" + PluginTransmissionAgents.GetAgentMaxCount(ZenSleep_Agents.TIREDNESS));
 			}
 
 			// Sometimes the client won't tell the server it's ready to fall uncon after yawning, this overrides that if necessary (TODO: Find a better way to fix this strange issue!)
 			if (fallUnconscious && m_SentUnconMessageLastUpdate && !player.IsUnconscious())
 			{
-				player.SetPlayerUncon();
+				player.Zen_SetPlayerUncon();
 				player.m_IsUnconsciousFromTiredness = true;
 				return;
 			}
@@ -104,7 +105,7 @@ class TirednessModifier: ModifierBase
 		{
 			if (GetZenSleepConfig().DebugOn)
 			{
-				player.SendMessage("Fall uncon!");
+				player.ZS_SendMessage("Fall uncon!");
 			}
 
 			player.SetUnconsciousFromTiredness();
@@ -116,7 +117,7 @@ class TirednessModifier: ModifierBase
 		}
 
 		// Debug message
-		if (GetZenSleepConfig().DebugOn)
+		if (GetZenSleepConfig().DebugOn == 1)
 		{
 			string debugStr = "";
 			if (tiredness >= m_TirednessThreshold)
@@ -124,7 +125,7 @@ class TirednessModifier: ModifierBase
 				debugStr = " | tiredDepthPenalty=" + tiredDepthPenalty + " | yawnChance=" + yawnChance + " | unconChance=" + unconChance + " | rand=" + rand + " yawn=" + (rand <= yawnChance) + " uncon=" + fallUnconscious + " FallUncon=" + player.m_FallUnconsciousFromTiredness + " LastYawn=" + m_UpdatesSinceLastYawn + "/100 updates";
 			}
 
-			player.SendMessage("Tiredness=" + tiredness + debugStr);
+			player.ZS_SendMessage("Tiredness=" + tiredness + debugStr);
 		}
 	}
 }

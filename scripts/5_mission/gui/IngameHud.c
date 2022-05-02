@@ -1,4 +1,4 @@
-// This class handles the tiredness UI stuff
+// This class handles the ZenSleep tiredness UI stuff
 modded class IngameHud
 {
 	// Tiredness HUD
@@ -6,18 +6,23 @@ modded class IngameHud
 	Widget m_TirednessIconPanel = NULL;
 	Widget m_TirednessBarPanel = NULL;
 	Widget m_SleepModLayout = NULL;
+	Widget m_SleepModHudPanel = NULL;
+	float m_SleepHudX = 0.855; // Tiredness HUD location on the GUI - can be overridden by server config
+	float m_SleepHudY = 0.03; // Tiredness HUD location on the GUI - can be overridden by server config
 
+	// Initialize the relevant widgets for this mod
 	override void Init(Widget hud_panel_widget)
 	{
 		super.Init(hud_panel_widget);
 
 		// Tiredness HUD
 		Class.CastTo(m_SleepModLayout, GetGame().GetWorkspace().CreateWidgets("ZenSleep/data/layout/ZenSleepLayout.layout"));
-		m_Tiredness = m_SleepModLayout.FindAnyWidget("SleepBar");
+		ProgressBarWidget.CastTo(m_Tiredness, m_SleepModLayout.FindAnyWidget("SleepBar"));
 		m_TirednessIconPanel = m_SleepModLayout.FindAnyWidget("SleepIconPanel");
 		m_TirednessBarPanel = m_SleepModLayout.FindAnyWidget("SleepBarPanel");
+		m_SleepModHudPanel = m_SleepModLayout.FindAnyWidget("HudPanel_Tiredness");
 
-		if (!m_Tiredness || !m_TirednessIconPanel || !m_TirednessBarPanel)
+		if (!m_Tiredness || !m_TirednessIconPanel || !m_TirednessBarPanel || !m_SleepModHudPanel)
 		{
 			Print("[ZenSleepHUD] Failed to load UI layout!");
 			return;
@@ -25,9 +30,11 @@ modded class IngameHud
 
 		m_TirednessIconPanel.Show(false);
 		m_TirednessBarPanel.Show(false);
+		m_SleepModHudPanel.GetPos(m_SleepHudX, m_SleepHudY);
 	}
 
-	override void SetTiredness(int value , int range)
+	// Sets the tiredness of our meter
+	override void SetTiredness(int value, int range)
 	{
 		if (!m_Tiredness)
 		{
@@ -38,6 +45,7 @@ modded class IngameHud
 		SetHudVisibility();
 	}
 
+	// Refreshes entire hud visibility - we also check our tiredness meter visibility here.
 	override void RefreshHudVisibility()
 	{
 		super.RefreshHudVisibility();
@@ -50,11 +58,13 @@ modded class IngameHud
 		SetHudVisibility();
 	}
 
+	// Updates the tiredness hud visibility based on the relevant conditions
 	void SetHudVisibility()
 	{
 		// Check if only show while tabbed is enabled from server config and if our inventory is open
 		bool overrideSleep = true;
-		PlayerBase player = GetGame().GetPlayer();
+		PlayerBase player;
+		PlayerBase.CastTo(player, GetGame().GetPlayer());
 		if (!player || !player.IsAlive())
 		{
 			if (m_TirednessIconPanel && m_TirednessBarPanel)
@@ -66,14 +76,26 @@ modded class IngameHud
 			return;
 		}
 
+		// Check if we need to move the position of the tiredness meter based on server config
+		if (m_SleepModHudPanel)
+		{
+			if (m_SleepHudX != player.m_TirednessHudX || m_SleepHudY != player.m_TirednessHudY)
+			{
+				m_SleepModHudPanel.SetPos(player.m_TirednessHudX, player.m_TirednessHudY);
+				m_SleepModHudPanel.GetPos(m_SleepHudX, m_SleepHudY);
+			}
+		}
+
+		// If only show on inventory is turned on, check if we're sleeping or have inventory open
 		if (player.m_OnlyShowSleepOnInventory)
 		{
 			overrideSleep = player.m_IsSleeping || m_HudInventory;
 		}
 
+		// If we have only show above certain tiredness percent on, check the threshold
 		if (player.m_OnlyShowSleepAbovePercent != 0)
 		{
-			if (((float)(player.m_Tiredness / player.MAX_TIREDNESS) * 100.0) < (float)player.m_OnlyShowSleepAbovePercent)
+			if (player.GetTiredPercent() < (float)player.m_OnlyShowSleepAbovePercent)
 			{
 				overrideSleep = player.m_IsSleeping || m_HudInventory;
 			}
@@ -87,7 +109,7 @@ modded class IngameHud
 		m_TirednessBarPanel.Show(shouldShow && overrideSleep);
 
 		// Hide hud if config is turned on
-		if (player && player.m_HideHudWhileSleeping)
+		if (player.m_HideHudWhileSleeping)
 		{
 			if (player.m_IsSleeping && player.IsAlive())
 			{

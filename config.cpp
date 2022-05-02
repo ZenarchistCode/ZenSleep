@@ -9,6 +9,9 @@
 
    In the same spirit, so is mine. Use this code however you like with no credit needed for me - but please credit Lucian for the foundation :)
 */
+
+#define _ARMA_
+
 class CfgPatches
 {
 	class ZenSleep
@@ -36,10 +39,10 @@ class CfgMods
 		credits="Lucian"; 
 		author="Zenarchist";
 		authorID="0";  
-		version="1.0";
+		version="1.1";
 		extra=0;
 		type="mod";
-		inputs = "ZenSleep/data/inputs.xml";
+		inputs="ZenSleep/data/inputs.xml";
 		dependencies[]=
 		{
 			"Game",
@@ -441,6 +444,7 @@ class CfgVehicles // Custom syringe definitions
 		};
 	};
 };
+// TODO: Make sure all yawn sounds are equalized volume-wise
 class CfgSoundShaders // Sound effect definitions
 {
 	class baseCharacter_SoundShader;
@@ -449,21 +453,21 @@ class CfgSoundShaders // Sound effect definitions
 	{
 		samples[] = { {"ZenSleep\data\sounds\yawn1_m",1} };
 		volume = 1;
-		range = 25;
+		range = 30;
 		rangeCurve[] = { {0,1},{0.5,0.7},{1,0} };
 	};
 	class yawn2_Male_SoundShader : baseCharacter_SoundShader
 	{
 		samples[] = { {"ZenSleep\data\sounds\yawn2_m",1} };
 		volume = 1;
-		range = 25;
+		range = 30;
 		rangeCurve[] = { {0,1},{0.5,0.7},{1,0} };
 	};
 	class yawn3_Male_SoundShader : baseCharacter_SoundShader
 	{
 		samples[] = { {"ZenSleep\data\sounds\yawn3_m",1} };
 		volume = 1;
-		range = 25;
+		range = 30;
 		rangeCurve[] = { {0,1},{0.5,0.7},{1,0} };
 	};
 	// Female yawns
@@ -471,21 +475,21 @@ class CfgSoundShaders // Sound effect definitions
 	{
 		samples[] = { {"ZenSleep\data\sounds\yawn1_f",1} };
 		volume = 1;
-		range = 25;
+		range = 30;
 		rangeCurve[] = { {0,1},{0.5,0.7},{1,0} };
 	};
 	class yawn2_Female_SoundShader : baseCharacter_SoundShader
 	{
 		samples[] = { {"ZenSleep\data\sounds\yawn2_f",1} };
 		volume = 1;
-		range = 25;
+		range = 30;
 		rangeCurve[] = { {0,1},{0.5,0.7},{1,0} };
 	};
 	class yawn3_Female_SoundShader : baseCharacter_SoundShader
 	{
 		samples[] = { {"ZenSleep\data\sounds\yawn3_f",1} };
 		volume = 1;
-		range = 25;
+		range = 30;
 		rangeCurve[] = { {0,1},{0.5,0.7},{1,0} };
 	};
 	// Male sleep sounds
@@ -493,21 +497,21 @@ class CfgSoundShaders // Sound effect definitions
 	{
 		samples[] = { {"ZenSleep\data\sounds\sleep1_m",1} };
 		volume = 1;
-		range = 25;
+		range = 30;
 		rangeCurve[] = { {0,1},{0.5,0.7},{1,0} };
 	};
 	class sleep2_Male_SoundShader : baseCharacter_SoundShader
 	{
 		samples[] = { {"ZenSleep\data\sounds\sleep2_m",1} };
 		volume = 1;
-		range = 25;
+		range = 30;
 		rangeCurve[] = { {0,1},{0.5,0.7},{1,0} };
 	};
 	class sleep3_Male_SoundShader : baseCharacter_SoundShader
 	{
 		samples[] = { {"ZenSleep\data\sounds\sleep3_m",1} };
 		volume = 1;
-		range = 25;
+		range = 30;
 		rangeCurve[] = { {0,1},{0.5,0.7},{1,0} };
 	};
 	// Female sleep sounds
@@ -515,24 +519,25 @@ class CfgSoundShaders // Sound effect definitions
 	{
 		samples[] = { {"ZenSleep\data\sounds\sleep1_f",1} };
 		volume = 1;
-		range = 25;
+		range = 30;
 		rangeCurve[] = { {0,1},{0.5,0.7},{1,0} };
 	};
 	class sleep2_Female_SoundShader : baseCharacter_SoundShader
 	{
 		samples[] = { {"ZenSleep\data\sounds\sleep2_f",1} };
 		volume = 1;
-		range = 25;
+		range = 30;
 		rangeCurve[] = { {0,1},{0.5,0.7},{1,0} };
 	};
 	class sleep3_Female_SoundShader : baseCharacter_SoundShader
 	{
 		samples[] = { {"ZenSleep\data\sounds\sleep3_f",1} };
 		volume = 1;
-		range = 25;
+		range = 30;
 		rangeCurve[] = { {0,1},{0.5,0.7},{1,0} };
 	};
 };
+
 class CfgSoundSets // Sound effect definitions
 {
 	class baseCharacter_SoundSet;
