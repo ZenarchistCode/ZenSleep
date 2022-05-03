@@ -1,3 +1,9 @@
+
+
+// THIS IS AN EXAMPLE OF THE DEFAULT SETTINGS - WHEN YOU RUN YOUR SERVER WITH THIS MOD INSTALLED
+// THE MOD WILL GENERATE A .JSON FILE WITH THESE VALUES. THAT IS THE FILE YOU SHOULD EDIT.
+// THE MOD WILL AUTOMATICALLY DETECT WHICH MAP YOU ARE PLAYING ON AND CHANGE THE DEFAULT FIRE TEMPERATURES ACCORDINGLY.
+
 {
     "MaxWakeTime": 240,
     "AllowInventoryWhileSleep": 0,
@@ -22,9 +28,9 @@
     "MaxRestNightWithFire": 100,
     "MaxRestWhenWetDay": 40,
     "MaxRestWhenWetNight": 75,
-    "HeatBuffCountsAsFire": 0,
-    "OutsideFireTemp": 28,
-    "InsideFireTemp": 38,
+    "HeatBuffCountsAsFire": 0, // If you turn this on, then the heat buff will count as a lit fire
+    "OutsideFireTemp": 28, // If you are on a winter map, this needs to be set much lower
+    "InsideFireTemp": 38, // Turn DebugOn=1 and sleep by a fire to see what temp the fire is giving
     "WetnessCancelsFireAccelerator": 1,
     "BaseSleepAccelerator": 1.0,
     "AsleepAccelerator": 0.0010000000474974514,
@@ -102,7 +108,7 @@
     "Str_CantSleep5": "I don't think I can sleep any longer, my clothes are wet and I'm cold...",
     "TirednessHudX": 0.8550000190734863,
     "TirednessHudY": 0.029999999329447748,
-    "AdminSteam64ID": "steamID64(Dec): www.steamidfinder.com",
+    "AdminSteam64ID": "www.steamidfinder.com", // This is your Steam64 Decimal ID (optional - allows you to reload this config with Numpad3 key without a server restart)
     "DebugOn": 0,
     "RestUpdateTick": 3
 }

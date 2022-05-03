@@ -84,7 +84,7 @@ modded class MissionBase extends MissionBaseWorld
 
 			if (GetZenSleepConfig().AdminSteam64ID != dataPlayer.param1.GetIdentity().GetPlainId())
 			{
-				//Print("[ZenSleep] Non-admin tried to request reload of config data: " + dataPlayer.param1.GetIdentity().GetName() + "[" + dataPlayer.param1.GetIdentity().GetPlainId() + "]");
+				//Print("[ZenSleep] Non-admin tried to request reload of config data: " + dataPlayer.param1.GetIdentity().GetName() + " [" + dataPlayer.param1.GetIdentity().GetPlainId() + "]");
 				return;
 			}
 

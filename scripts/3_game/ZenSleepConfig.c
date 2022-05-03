@@ -69,7 +69,7 @@ class ZenSleepConfig
 	// Debug config
 	float TirednessHudX = 0.855; // X position for tiredness widget
 	float TirednessHudY = 0.03; // Y position for tiredness widget
-	string AdminSteam64ID = "steamID64(Dec): www.steamidfinder.com"; // Your steam 64 ID (decimal version) - optional, allows you to reload json config with a hotkey
+	string AdminSteam64ID = "www.steamidfinder.com"; // Your steam 64 ID (decimal version) - optional, allows you to reload json config with a hotkey
 	int DebugOn = 0; // Enable/disable debug mode (1 = full verbosity, 2 = low verbosity)
 	int RestUpdateTick = 3; // How often to update player ticks (don't adjust this unless absolutely necessary (eg. if server performance is affected by lots of players), it will require a re-balance of nearly all the above values!)
 
@@ -78,19 +78,32 @@ class ZenSleepConfig
 	{
 		if (GetGame().IsServer()) 
 		{
+			// Get map name
+			string worldName = "empty";
+			GetGame().GetWorldName(worldName);
+			worldName.ToLower();
+
 			if (FileExist(zenModFolder + zenConfigName))
 			{ // If config exists, load file
 				JsonFileLoader<ZenSleepConfig>.JsonLoadFile(zenModFolder + zenConfigName, this);
 			}
-			else 
-			{ // Config file does not exist, create default file
+			else // Config file does not exist, create default file
+			{
+				switch (worldName) // Adjust default settings based on map
+				{
+					case "namalsk":
+						OutsideFireTemp = 1;
+						InsideFireTemp = 10;
+						break;
+				}
+
 				// Save default settings for energy drinks
 				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Pipsi", 20));
 				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Cola", 25));
 				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Spite", 10));
 				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Kvass", 5));
 				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Fronta", 15));
-				EnergyDrinks.Insert(new EnergyDrink("Epinephrine", -15));
+				EnergyDrinks.Insert(new EnergyDrink("Epinephrine", -10));
 				EnergyDrinks.Insert(new EnergyDrink("Morphine", -20));
 				EnergyDrinks.Insert(new EnergyDrink("AntiChemInjector", -100));
 				EnergyDrinks.Insert(new EnergyDrink("ZenSleep_Syringe", -100));

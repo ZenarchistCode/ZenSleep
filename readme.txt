@@ -262,3 +262,8 @@ MINOR SERVER CHANGES:
 - Added "#define ZenSleep" so that other modders can interact with this mod in their code more easily
 
 To implement all of these changes into your server config, update the mod and then you will need to carefully copy your existing settings into the new JSON file. The new JSON file is included in the mod folder and will also be created automatically if you run your server without an existing one (so if you haven't changed any settings, just delete your existing ZenSleepConfig.json file to apply the new changes).
+----------------------------------------------------------------------
+3rd March 2022:
+----------------------------------------------------------------------
+- Hotfix for Namalsk servers. The mod will now automatically detect Namalsk and generate the default JSON config values accordingly so that fire detection works properly.
+- For other winter maps - turn DebugOn=1 and sleep by a fire to see what temperature the fire is giving the player, and adjust OutsideFireTemp and InsideFireTemp accordingly.

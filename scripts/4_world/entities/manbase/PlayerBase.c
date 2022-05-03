@@ -91,16 +91,20 @@ modded class PlayerBase
 	}
 
 	// Triggered on connect to server
-	override void OnConnect()
+	//override void OnConnect()
+	//{
+	//	super.OnConnect();
+	//}
+
+	// Called when the player is loaded
+	override void OnPlayerLoaded()
 	{
-		super.OnConnect();
+		super.OnPlayerLoaded();
 
 		if (GetGame().IsServer())
 		{
 			// Set client-side config from server
 			LoadServerConfig();
-
-			// Update client
 			ZenSleep_SyncState();
 			ScheduleSleepDataUpdate(false);
 		}
