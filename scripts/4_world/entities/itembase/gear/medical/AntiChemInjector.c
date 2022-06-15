@@ -12,12 +12,6 @@ modded class AntiChemInjector
 
 		float penalty = (float)player.MAX_TIREDNESS * ((float)penaltyPct / 100.0);
 
-		// If the penalty is supposed to be negative we need to flip it to positive as we're ADDING tiredness
-		if (penaltyPct < 0)
-		{
-			penalty = Math.AbsFloat(penalty);
-		}
-
 		if (GetZenSleepConfig().DebugOn)
 		{
 			player.ZS_SendMessage("Giving tiredness penalty: " + penalty);

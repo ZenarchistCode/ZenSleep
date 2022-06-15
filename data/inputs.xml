@@ -2,15 +2,15 @@
 <modded_inputs>
 	<inputs>
 		<actions>
-			<input name="ZenSleep_SleepKey" loc="#ZenSleep_SleepKey_Txt" />
-			<input name="ZenSleep_RefreshConfig" loc="#ZenSleep_RefreshConfig_Txt" />
+			<input name="UAZenSleep_SleepKey" loc="STR_ZenSleep_SleepKey_Txt" />
+			<input name="UAZenSleep_RefreshConfig" loc="STR_ZenSleep_RefreshConfig_Txt" />
 		</actions>
 	</inputs>
     <preset>
-		<input name="ZenSleep_SleepKey">
-            <btn name="kP"/>
+		<input name="UAZenSleep_SleepKey">
+            <btn name=""/>
         </input>
-		<input name="ZenSleep_RefreshConfig">
+		<input name="UAZenSleep_RefreshConfig">
             <btn name="kNumpad3"/>
         </input>
     </preset>

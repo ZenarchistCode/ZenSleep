@@ -1,10 +1,5 @@
-
-
-// THIS IS AN EXAMPLE OF THE DEFAULT SETTINGS - WHEN YOU RUN YOUR SERVER WITH THIS MOD INSTALLED
-// THE MOD WILL GENERATE A .JSON FILE WITH THESE VALUES. THAT IS THE FILE YOU SHOULD EDIT.
-// THE MOD WILL AUTOMATICALLY DETECT WHICH MAP YOU ARE PLAYING ON AND CHANGE THE DEFAULT FIRE TEMPERATURES ACCORDINGLY.
-
 {
+    "CONFIG_MAIN": "------------------------------------------------------------------------------------",
     "MaxWakeTime": 240,
     "AllowInventoryWhileSleep": 0,
     "CanUnconInVehicle": 1,
@@ -14,87 +9,106 @@
     "HideHudWhileSleeping": 1,
     "OnlyShowSleepOnInventory": 0,
     "OnlyShowSleepAbovePercent": 0,
+    "CONFIG_RANDOM_CHANCE": "---------------------------------------------------------------------------",
     "SleepSoundPercentChance": 0.07999999821186066,
     "YawnPercentStart": 20,
     "YawnPercentChance": 0.06499999761581421,
     "UnconPercentStart": 10,
     "UnconPercentChance": 0.009999999776482582,
+    "CONFIG_INFLUENZA": "-------------------------------------------------------------------------------",
     "InfluenzaInjectNoFire": 5,
     "InfluenzaMultiplierNightNoFire": 1.5,
     "InfluenzaMultiplierWetNoFire": 2.0,
+    "CONFIG_MAX_REST": "--------------------------------------------------------------------------------",
     "MaxRestDayNoFire": 50,
     "MaxRestDayWithFire": 75,
     "MaxRestNightNoFire": 80,
     "MaxRestNightWithFire": 100,
     "MaxRestWhenWetDay": 40,
     "MaxRestWhenWetNight": 75,
-    "HeatBuffCountsAsFire": 0, // If you turn this on, then the heat buff will count as a lit fire
-    "OutsideFireTemp": 28, // If you are on a winter map, this needs to be set much lower
-    "InsideFireTemp": 38, // Turn DebugOn=1 and sleep by a fire to see what temp the fire is giving
+    "CONFIG_ACCELERATOR": "-----------------------------------------------------------------------------",
+    "HeatBuffCountsAsFire": 0,
     "WetnessCancelsFireAccelerator": 1,
     "BaseSleepAccelerator": 1.0,
     "AsleepAccelerator": 0.0010000000474974514,
     "OutsideFireAcceleratorPercent": 5,
     "InsideNoFireAcceleratorPercent": 10,
-    "InsideFireAcceleratorPercent": 25,
+    "InsideFireAcceleratorPercent": 20,
+    "CONFIG_NIGHT": "-----------------------------------------------------------------------------------",
     "NightTimeStartHour": 0,
     "NightTimeStartMin": 0,
     "NightTimeEndHour": 0,
     "NightTimeEndMin": 0,
+    "CONFIG_MODIFIERS": "-------------------------------------------------------------------------------",
     "EnergyDrinks": [
         {
             "ItemType": "SodaCan_Pipsi",
-            "EnergyGained": 20
-        },
-        {
-            "ItemType": "SodaCan_Cola",
-            "EnergyGained": 25
-        },
-        {
-            "ItemType": "SodaCan_Spite",
-            "EnergyGained": 10
-        },
-        {
-            "ItemType": "SodaCan_Kvass",
-            "EnergyGained": 5
-        },
-        {
-            "ItemType": "SodaCan_Fronta",
-            "EnergyGained": 15
-        },
-        {
-            "ItemType": "Epinephrine",
-            "EnergyGained": -15
-        },
-        {
-            "ItemType": "Morphine",
             "EnergyGained": -20
         },
         {
+            "ItemType": "SodaCan_Cola",
+            "EnergyGained": -25
+        },
+        {
+            "ItemType": "SodaCan_Spite",
+            "EnergyGained": -10
+        },
+        {
+            "ItemType": "SodaCan_Kvass",
+            "EnergyGained": -5
+        },
+        {
+            "ItemType": "SodaCan_Fronta",
+            "EnergyGained": -15
+        },
+        {
+            "ItemType": "Epinephrine",
+            "EnergyGained": 10
+        },
+        {
+            "ItemType": "Morphine",
+            "EnergyGained": 20
+        },
+        {
             "ItemType": "AntiChemInjector",
-            "EnergyGained": -100
+            "EnergyGained": 100
         },
         {
             "ItemType": "ZenSleep_Syringe",
-            "EnergyGained": -100
+            "EnergyGained": 100
         },
         {
             "ItemType": "ZenSleep_StimSyringe",
-            "EnergyGained": 100
+            "EnergyGained": -100
         }
     ],
     "RestObjects": [
         {
             "ObjectType": "MediumTent",
-            "MaxRestDay": 60,
+            "MaxRestDay": 80,
+            "MaxRestNight": 100,
+            "SleepAcceleratorPercent": 10,
+            "Influenza": 0
+        },
+        {
+            "ObjectType": "MSP_SleepingBag",
+            "MaxRestDay": 80,
+            "MaxRestNight": 100,
+            "SleepAcceleratorPercent": 10,
+            "Influenza": 0
+        },
+        {
+            "ObjectType": "MSP_Mattress",
+            "MaxRestDay": 80,
             "MaxRestNight": 100,
             "SleepAcceleratorPercent": 10,
             "Influenza": 0
         }
     ],
+    "CONFIG_TEXT": "------------------------------------------------------------------------------------",
     "Str_RestUpdate": "My rest level is",
     "Str_RestUpdate1": "and I'm cold...",
-    "Str_RestUpdate2": "and I'm getting cold...",
+    "Str_RestUpdate2": "and I'm losing warmth...",
     "Str_RestUpdate3": "and I'm warm.",
     "Str_RestUpdate4": "and I'm comfortably warm.",
     "Str_RestUpdate5": "and my clothes are wet and uncomfortable...",
@@ -106,9 +120,10 @@
     "Str_CantSleep3": "I don't think I can sleep any longer, it's too bright and I'm cold...",
     "Str_CantSleep4": "I don't think I can sleep any longer, it's too bright...",
     "Str_CantSleep5": "I don't think I can sleep any longer, my clothes are wet and I'm cold...",
+    "CONFIG_DEBUG": "-----------------------------------------------------------------------------------",
     "TirednessHudX": 0.8550000190734863,
     "TirednessHudY": 0.029999999329447748,
-    "AdminSteam64ID": "www.steamidfinder.com", // This is your Steam64 Decimal ID (optional - allows you to reload this config with Numpad3 key without a server restart)
-    "DebugOn": 0,
+    "AdminSteam64ID": "www.steamidfinder.com",
+    "DebugOn": 1,
     "RestUpdateTick": 3
 }

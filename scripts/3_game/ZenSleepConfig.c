@@ -6,6 +6,7 @@ class ZenSleepConfig
 	private const static string zenConfigName = "ZenSleepConfig.json";
 
 	// Main config data
+	string CONFIG_MAIN = "------------------------------------------------------------------------------------";
 	int MaxWakeTime = 240; // Max time you can stay awake before you fall unconscious
 	bool AllowInventoryWhileSleep = false; // Enable/disable the player accessing their inventory while sleeping
 	bool CanUnconInVehicle = true; // Enable/disable falling uncon from tiredness in vehicles
@@ -16,45 +17,49 @@ class ZenSleepConfig
 	bool OnlyShowSleepOnInventory = false; // Enable/disable only showing sleep meter while inventory is open
 	int OnlyShowSleepAbovePercent = 0; // Sets what sleep level to show the sleep meter at (optional - 0 = disabled)
 	// Random chance config
+	string CONFIG_RANDOM_CHANCE = "---------------------------------------------------------------------------";
 	float SleepSoundPercentChance = 0.08; // Percentage chance of playing a sleep sound while player is sleeping
 	int YawnPercentStart = 20; // Percentage of tiredness that you start yawning & blinking
 	float YawnPercentChance = 0.065; // Percentage chance of yawning AFTER we are below YawnPercentStart tiredness
 	int UnconPercentStart = 10; // Percentage of tiredness that you start randomly falling uncon
 	float UnconPercentChance = 0.01; // Percentage chance of falling uncon AFTER we are below UnconPercentStart
 	// Influenza config
+	string CONFIG_INFLUENZA = "-------------------------------------------------------------------------------";
 	int InfluenzaInjectNoFire = 5; // How much influenza to inject the player with if they're not sleeping near a fire (this = random/1000)
 	float InfluenzaMultiplierNightNoFire = 1.5; // How much more influenza to inject if there is no fire nearby
 	float InfluenzaMultiplierWetNoFire = 2.0; // How much more influenza to inject if there is no fire nearby AND the player is wet
 	// Max rest config
+	string CONFIG_MAX_REST = "--------------------------------------------------------------------------------";
 	int MaxRestDayNoFire = 50; // Max sleep % you can gain while sleeping during the day with no fire or rest object that overrides this setting
 	int MaxRestDayWithFire = 75; // Max sleep % you can gain while sleeping during the day with a fire
 	int MaxRestNightNoFire = 80; // Max sleep % you can gain while sleeping during the night with no fire
 	int MaxRestNightWithFire = 100; // Max sleep % you can gain while sleeping during the night with a fire nearby
 	int MaxRestWhenWetDay = 40; // Max amount of sleep you can get if your clothes are wet during the day
 	int MaxRestWhenWetNight = 75; // Max amount of sleep you can get if your clothes are wet at night
-	// Temperature config
-	bool HeatBuffCountsAsFire = false; // Whether or not to count the player's heat buff as sleeping near a fire
-	int OutsideFireTemp = 28; // How hot a fire typically is when lit outside (this varies depending on the map & winter - default value is for regular chern/livonia)
-	int InsideFireTemp = 38; // How hot a fire typically is when lit inside (this varies depending on the map & winter - default value is for regular chern/livonia)
 	// Sleep accelerator config
+	string CONFIG_ACCELERATOR = "-----------------------------------------------------------------------------";
+	bool HeatBuffCountsAsFire = false; // Whether or not to count the player's heat buff as sleeping near a fire
 	bool WetnessCancelsFireAccelerator = true; // If player is wet, then the player will not sleep any faster next to a fire
 	float BaseSleepAccelerator = 1.0; // How fast the player sleeps with no accelerator condition
 	float AsleepAccelerator = 0.001; // How much faster you sleep each rest tick (rewarding you for staying asleep longer)
 	int OutsideFireAcceleratorPercent = 5; // How much quicker you sleep outside next to a fire (as a percentage)
 	int InsideNoFireAcceleratorPercent = 10; // How much quicker you sleep inside a building with no fire (as a percentage)
-	int InsideFireAcceleratorPercent = 25; // How much quicker you sleep inside a building near a fire (as a percentage)
+	int InsideFireAcceleratorPercent = 20; // How much quicker you sleep inside a building near a fire (as a percentage)
 	// Night time config (eg. to make night-time from 10:30PM->5:45AM set it to 22, 30, 5, 45)
+	string CONFIG_NIGHT = "-----------------------------------------------------------------------------------";
 	int NightTimeStartHour = 0; // The starting hour of night time - overrides vanilla IsNight() - in 24 hour time (eg. 23 = 11pm)
 	int NightTimeStartMin = 0; // The starting minute of night time - between 0-59
 	int NightTimeEndHour = 0; // The ending hour of night time
 	int NightTimeEndMin = 0; // The ending minute of night time
 	// Energy drinks & rest object config
+	string CONFIG_MODIFIERS = "-------------------------------------------------------------------------------";
 	ref array<ref EnergyDrink> EnergyDrinks = new array<ref EnergyDrink>; // List of energy drink objects (doesn't need to be drinks - can be any consumable)
 	ref array<ref RestObject> RestObjects = new array<ref RestObject>; // List of rest objects that you can sleep near for a boost
 	// String config (only applicable if TextNotificationOn = true)
+	string CONFIG_TEXT = "------------------------------------------------------------------------------------";
 	string Str_RestUpdate = "My rest level is"; // Rest level update
 	string Str_RestUpdate1 = "and I'm cold...";
-	string Str_RestUpdate2 = "and I'm getting cold...";
+	string Str_RestUpdate2 = "and I'm losing warmth...";
 	string Str_RestUpdate3 = "and I'm warm.";
 	string Str_RestUpdate4 = "and I'm comfortably warm.";
 	string Str_RestUpdate5 = "and my clothes are wet and uncomfortable...";
@@ -67,6 +72,7 @@ class ZenSleepConfig
 	string Str_CantSleep4 = "I don't think I can sleep any longer, it's too bright...";
 	string Str_CantSleep5 = "I don't think I can sleep any longer, my clothes are wet and I'm cold...";
 	// Debug config
+	string CONFIG_DEBUG = "-----------------------------------------------------------------------------------";
 	float TirednessHudX = 0.855; // X position for tiredness widget
 	float TirednessHudY = 0.03; // Y position for tiredness widget
 	string AdminSteam64ID = "www.steamidfinder.com"; // Your steam 64 ID (decimal version) - optional, allows you to reload json config with a hotkey
@@ -78,38 +84,27 @@ class ZenSleepConfig
 	{
 		if (GetGame().IsServer()) 
 		{
-			// Get map name
-			string worldName = "empty";
-			GetGame().GetWorldName(worldName);
-			worldName.ToLower();
-
 			if (FileExist(zenModFolder + zenConfigName))
 			{ // If config exists, load file
 				JsonFileLoader<ZenSleepConfig>.JsonLoadFile(zenModFolder + zenConfigName, this);
 			}
 			else // Config file does not exist, create default file
 			{
-				switch (worldName) // Adjust default settings based on map
-				{
-					case "namalsk":
-						OutsideFireTemp = 1;
-						InsideFireTemp = 10;
-						break;
-				}
-
 				// Save default settings for energy drinks
-				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Pipsi", 20));
-				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Cola", 25));
-				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Spite", 10));
-				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Kvass", 5));
-				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Fronta", 15));
-				EnergyDrinks.Insert(new EnergyDrink("Epinephrine", -10));
-				EnergyDrinks.Insert(new EnergyDrink("Morphine", -20));
-				EnergyDrinks.Insert(new EnergyDrink("AntiChemInjector", -100));
-				EnergyDrinks.Insert(new EnergyDrink("ZenSleep_Syringe", -100));
-				EnergyDrinks.Insert(new EnergyDrink("ZenSleep_StimSyringe", 100));
+				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Pipsi", -20));
+				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Cola", -25));
+				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Spite", -10));
+				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Kvass", -5));
+				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Fronta", -15));
+				EnergyDrinks.Insert(new EnergyDrink("Epinephrine", 10));
+				EnergyDrinks.Insert(new EnergyDrink("Morphine", 20));
+				EnergyDrinks.Insert(new EnergyDrink("AntiChemInjector", 100));
+				EnergyDrinks.Insert(new EnergyDrink("ZenSleep_Syringe", 100));
+				EnergyDrinks.Insert(new EnergyDrink("ZenSleep_StimSyringe", -100));
 				// Save default settings for rest objects
-				RestObjects.Insert(new RestObject("MediumTent", 60, 100, 10, 0));
+				RestObjects.Insert(new RestObject("MediumTent", 80, 100, 10, 0));
+				RestObjects.Insert(new RestObject("MSP_SleepingBag", 80, 100, 10, 0));
+				RestObjects.Insert(new RestObject("MSP_Mattress", 80, 100, 10, 0));
 				// Save config
 				Save();
 			}

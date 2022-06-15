@@ -2,7 +2,7 @@ What Is This?
 
 This mod adds an immersive sleeping feature to the game.
 
-It is heavily based on and inspired by Lucian's old Medical Attention mod, so 90% of the credit goes to him (and TRIANGLES for updating his mod to work with recent builds of DayZ).
+It is heavily based on and inspired by Lucian's old Medical Attention mod, so most of the credit goes to him.
 
 It has been designed to be as intuitive and immersive as possible, but keep reading to learn about all the various features and behaviors of this mod.
 
@@ -22,17 +22,15 @@ You can recover your rest using the "Lie Down" emote (NOT the "Lie Back" emote!)
 
 The longer you let your player stay sleeping, the faster your energy recovers.
 
-Sleeping next to a fire will not only protect you from potentially catching influenza, but will help you rest faster and recover more energy.
+Sleeping next to a fire will not only protect you from potentially catching influenza, but will help you rest faster and recover more energy. You must be within 3 meters of the fire to feel its warmth. The heat buffer will also protect you from influenza.
 
-Keep in mind that it takes a while for the fire to generate enough heat for you to feel it, so build your fire large and let it burn for a minute or two before resting.
-
-Having the heat buffer will protect you from influenza, but some fires are hotter than others and you will recover energy faster next to a really large & warm fire.
+Sleeping inside a building or tent will also speed up your rest time.
 
 During the day you can only recover 50% of your energy sleeping without a fire, or 75% with a fire.
 During the night you can only recover 80% of your energy sleeping without a fire, or 100% with a fire.
-Sleeping inside buildings and tents (especially with a fire nearby) is the best way to recover your energy quickly.
+Sleeping inside buildings and tents (especially with a fire lit nearby) is the best way to recover your energy quickly.
 
-Sleeping in a building with a fire lit is the fastest way to recover your energy, and you have no chance of catching the flu.
+If you are wet you might not be able to reach the maximum rest level, so make sure to dry your clothes out before sleeping.
 
 Certain drinks can help you recover your energy (soda cans). Certain meds will make you more sleepy (PO-X injectors especially, but also morphine & epinephrine).
 
@@ -61,20 +59,21 @@ Max Rest While Sleeping:
 - 80% at night with no fire
 - 100% at night with a fire
 - Beware - if you sleep without a fire you might catch influenza (configurable)
+- Being wet affects your max rest level and influenza as well.
 
-Fire Notes:
-The temperature of fires varies depending on the map, and the weather. The default temperature values are configured for regular Chernarus and Livonia but might need tweaking depending on which map you have on your server.
+Other Notes:
+The mod will detect fires within 3m of the player, and if the fire is lit then it counts as a heat source.
 
-To see the temperature of a fire, build one on your private LAN or test server and sleep next to it with DebugOn=1 in the json config to see what temp your player is getting.
+If you have issues with fires on certain maps or sleeping next to modded heat sources, try turning "HeatBuffCountsAsFire=true" on.
 
-If you have issues detecting fires on winter maps it might be worth just turning "HeatBuffCountsAsFire=true" on.
+Set DebugOn=1 in the config to get detailed messages explaining what the mod is doing and what values it is detecting.
 
 Rest Accelerators:
 Depending on where you are sleeping will affect how quickly you regenerate energy. The mod can tell when you are sleeping under a roof and if you have a fire lit nearby.
 - Asleep Outside With No Fire = 1x
 - Asleep Outside With A Fire = 5% faster
 - Asleep Inside House or Building With No Fire = 10% faster
-- Asleep Inside House or Building With A Fire = 25% faster
+- Asleep Inside House or Building With A Fire = 20% faster
 
 Energy Drinks / Consumption Items:
 You can add your own energy drinks/consumption items in the json config. The default ones are:
@@ -84,11 +83,11 @@ You can add your own energy drinks/consumption items in the json config. The def
 - Spite: +10% energy
 - Kvass: +5% energy
 
-The mod checks for energy drink items and rest object types with a "contains" check and is not case-sensitive. So in other words, if you want to make all soda cans restore 20% of your energy you can just set the JSON config to have this entry:
+The mod checks for energy drink items and rest object types with a "contains" check and is not case-sensitive. A negative value increases energy, a positive value decreases energy. So in other words, if you want to make all soda cans restore 20% of your energy you can just set the JSON config to have this entry:
 
 {
     "ItemType": "sodacan",
-    "EnergyGained": 20
+    "EnergyGained": -20
 }
 
 Some meds will also negatively affect your energy:
@@ -106,12 +105,12 @@ The stimulant syringe maxes out your rest energy (can be used on self or others)
 
 These syringes are optional and can be disabled by simply not adding the types to your types.xml.
 
-(If you want to enable them spawning, just copy the provided types.xml from the mod folder into your server's types.xml)
+(If you want to enable them spawning, just copy the text inside the provided types.xml from the mod folder and merge it into your server's types.xml)
 
 Rest Objects:
 You can add specific objects in the json config that affect how the player sleeps.
 Note: This feature is still in development and doesn't work 100% of the time on some objects.
-- MediumTent: Max rest during the day with no fire is 60%, you sleep 10% faster and no chance of influenza regardless of fire status.
+- MediumTent: Max rest during the day with no fire is 80%, you sleep 10% faster and no chance of influenza regardless of fire status.
 
 Default Mod Settings That Can Be Tweaked/Enabled/Disabled:
 
@@ -151,14 +150,9 @@ MAX REST CONFIG
 [MaxRestWhenWetDay=40] Maximum achievable rest % when sleeping with wet clothes during the day (regardless of fire)
 [MaxRestWhenWetNight=75] Maximum achievable rest % when sleeping with wet clothes during the night (regardless of fire)
 ######################################################################
-TEMPERATURE CONFIG
-######################################################################
-[HeatBuffCountsAsFire=false] If enabled then having the heat buff is equivalent to sleeping next to a fire and will apply sleep accelerators.
-[OutsideFireTemp=28] How hot a fire typically is when lit outside (this varies depending on the map & weather - use debug mode on a private server to adjust)
-[InsideFireTemp=38] How hot a fire typically is when lit inside (this varies depending on the map & weather - use debug mode on a private server to adjust)
-######################################################################
 SLEEP ACCELERATOR CONFIG
 ######################################################################
+[HeatBuffCountsAsFire=false] If enabled then having the heat buff is equivalent to sleeping next to a fire and will apply sleep accelerators.
 [WetnessCancelsFireAccelerator=true] If player has wet clothes, don't give them any rest buffs (set to 0 to disable)
 [BaseSleepAccelerator=1.0] How fast the player sleeps if no fire or rest object is detected nearby (1x speed by default)
 [AsleepAccelerator=0.01%] Energy recovery speed increases by this value every few seconds while sleeping so the longer you sleep the faster you recover
@@ -196,10 +190,6 @@ DEBUG CONFIG
 
 Important Notes:
 This mod is still in development and I'm not an experienced modder, so there may be issues with these early builds. Please be patient and also please let me know if you encounter any issues (and ideally as much info about what caused it as possible so I can investigate it and try to recreate it myself).
-
-This mod has only been tested on my own private server so far with myself and an alt account, so I really have no idea how it will perform on highly populated servers. But I've done my very best to write the code to be as optimized and efficient as I can, so it *should* theoretically run fine on most servers.
-
-I haven't tested it on Namalsk yet, please let me know if the heat sources don't quite work there as it's likely the environment temperatures will be a lot lower than Livonia or Chernarus. I included the options to set the fire temperatures in the json config (OutsideFireTemp & InsideFireTemp) - you will probably need to tweak these on winter maps.
 
 There are a handful of other minor quirks with the mod I'm still ironing out but so far I haven't discovered any major issues. 
 
@@ -267,3 +257,12 @@ To implement all of these changes into your server config, update the mod and th
 ----------------------------------------------------------------------
 - Hotfix for Namalsk servers. The mod will now automatically detect Namalsk and generate the default JSON config values accordingly so that fire detection works properly.
 - For other winter maps - turn DebugOn=1 and sleep by a fire to see what temperature the fire is giving the player, and adjust OutsideFireTemp and InsideFireTemp accordingly.
+----------------------------------------------------------------------
+15th June 2022:
+----------------------------------------------------------------------
+- Changed fireplace detection from temperature-based to object-based (should now work on all maps regardless of ambient temperature)
+- Changed "energy drink" consumption so that it affects energy level based on gradual consumption (allows you to share drinks with other players)
+- Fixed some "energy drink" items not applying their added energy/penalty to energy correctly
+- Fixed hotkeys in the DayZ settings UI for 1.18 update and removed default "P" key (players might want to use the new inbuilt emote hotkeys instead)
+- Made JSON config file more organized into sections
+- Slightly adjusted some default settings

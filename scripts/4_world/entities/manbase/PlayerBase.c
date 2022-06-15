@@ -8,15 +8,18 @@ modded class PlayerBase
 	bool m_CantSleep = false; // When this is true, the player wakes up but stays lying down (ie. when max rest is reached)
 	bool m_SleepingInside = false; // This affects our sleep accelerator modifier but is only checked when sleeping
 	int m_TirednessUpdateCountdown = 0; // Used to countdown ticks between sending sleep % update message
-	float m_PlayerRestTick = 1; // Current tick for this sleep mod
+	float m_PlayerRestTick = 1; // Current tick for the player checker function
+	float m_RestObjectTick = 1; // Current tick for the rest object checker function
 	float m_AccumulatedRest = 1; // How much rest we have accumulated while sleeping
 	float m_SleepAccumulatorModifier = 0; // This slowly increases while you sleep, making your sleep get faster (rewarding you for staying asleep longer).
 	PluginPlayerStatus m_Mod_ModulePlayerStatus; // The PlayerStatus Plugin object for this mod
+	
 	// Server-side rest object variables
 	int m_RestObjectChecks = 0; // How many times we've scanned the area for rest objects
 	int m_RestObjectMaxSleep = 0; // Nearby rest object max sleep % when sleeping inside of it
 	float m_RestObjectAccelerator = 0; // This increases the speed at which you recover rest based on the rest object (tents etc)
 	bool m_RestObjectInfluenza = true; // Whether or not you can catch influenza while sleeping in the current nearby rest object
+	bool m_FireNearby = false; // Whether or not there was a fire lit nearby recently
 
 	// Client & server sync variables
 	bool m_OnlyBlurScreen = false; // If true, then when the player is sleeping their screen will blur instead of going black
@@ -67,7 +70,7 @@ modded class PlayerBase
 	void ZS_SendMessage(string message)
 	{
 		Param1<string> m_MessageParam = new Param1<string>("");
-		if (GetGame().IsServer() && m_MessageParam && IsAlive() && message != "")
+		if (GetGame().IsServer() && m_MessageParam && IsAlive() && message != "" && !IsPlayerDisconnected())
 		{
 			m_MessageParam.param1 = message;
 			GetGame().RPCSingleParam(this, ERPCs.RPC_USER_ACTION_MESSAGE, m_MessageParam, true, GetIdentity());
@@ -242,6 +245,7 @@ modded class PlayerBase
 		m_CantSleep = false;
 		m_SleepingInside = false;
 		m_PlayerRestTick = 0;
+		m_RestObjectTick = 0;
 		m_AccumulatedRest = 1;
 		m_TirednessUpdateCountdown = 0;
 		m_SleepAccumulatorModifier = 0;
@@ -249,6 +253,10 @@ modded class PlayerBase
 		m_RestObjectAccelerator = 0;
 		m_RestObjectChecks = 0;
 		m_RestObjectInfluenza = true;
+		m_FireNearby = false;
+
+		// Check for a fire/rest object nearby
+		GetNearbyRestObjectAccelerator();
 	}
 
 	// Returns how tired the player currently is (as a percentage between 0.0-100.0%)
@@ -281,7 +289,7 @@ modded class PlayerBase
 		return isSleeping;
 	}
 
-	// (Server) Tells the client to play a sleep sound effect
+	// (Server) Tells the client to play a sleep sound effect (sync'd by server so that nearby players can also hear it)
 	void MakeSleepSound()
 	{
 		m_PlaySleepSound = Math.RandomIntInclusive(1, 3); // Play random sleep sound effect out of 3 possible
@@ -393,7 +401,7 @@ modded class PlayerBase
 
 		if (m_SleepingInside) // If player is inside a building (or a medium tent)
 		{
-			if (m_Environment.GetTemperature() >= (float)GetZenSleepConfig().InsideFireTemp || (m_HasHeatBuffer && GetZenSleepConfig().HeatBuffCountsAsFire)) // Fire detected
+			if (m_FireNearby || (m_HasHeatBuffer && GetZenSleepConfig().HeatBuffCountsAsFire)) // Fire detected
 			{
 				return (GetZenSleepConfig().InsideFireAcceleratorPercent / 100) + 1; // Inside + fire buff
 			}
@@ -402,7 +410,7 @@ modded class PlayerBase
 		}
 		else // If player is outside in the wild
 		{
-			if (m_Environment.GetTemperature() >= (float)GetZenSleepConfig().OutsideFireTemp || (m_HasHeatBuffer && GetZenSleepConfig().HeatBuffCountsAsFire)) // Fire detected
+			if (m_FireNearby || (m_HasHeatBuffer && GetZenSleepConfig().HeatBuffCountsAsFire)) // Fire detected
 			{
 				return (GetZenSleepConfig().OutsideFireAcceleratorPercent / 100) + 1;
 			}
@@ -414,16 +422,18 @@ modded class PlayerBase
 	// Check for nearby objects in the config list, and apply the rest accelerator.
 	void GetNearbyRestObjectAccelerator()
 	{
-		// This if statement is necessary because sometimes objects aren't found straight away - we need to check a few times, but not too many times as it's unnecessary.
-		if (GetZenSleepConfig().RestObjects.Count() == 0 || m_RestObjectChecks >= 4)
+		if (GetZenSleepConfig().RestObjects.Count() == 0)
 		{
 			return;
 		}
 		
 		array<Object> nearest_objects = new array<Object>;
 		array<CargoBase> proxy_cargos = new array<CargoBase>;
-		GetGame().GetObjectsAtPosition(GetPosition(), 0.5, nearest_objects, proxy_cargos);
+
+		// Get all objects in a 3 meter radius from our position
+		GetGame().GetObjectsAtPosition(this.GetPosition(), 3.0, nearest_objects, proxy_cargos);
 		RestObject ro = NULL;
+		bool litFireFound = false;
 
 		// TODO: Find out why large tents and random other objects don't work sometimes???
 		for (int i = 0; i < nearest_objects.Count(); i++)
@@ -432,22 +442,23 @@ modded class PlayerBase
 
 			if (nearest_object != this) // If found object is not our player...
 			{
+				FireplaceBase fire = FireplaceBase.Cast(nearest_object);
+
+				if (fire) // If this object is a fireplace, check if it's burning
+				{
+					if (fire.IsBurning())
+						litFireFound = true;
+				}
+				else
+				{
+					// If the distance to the rest object is > 1 meter and it's not a fire, ignore it as we're not inside or ontop of it.
+					if (vector.Distance(nearest_object.GetPosition(), this.GetPosition()) > 1.0)
+						continue;
+				}
+
 				string nearbyObjectType = nearest_object.GetType();
 
-				/*if (nearbyObjectType.Contains("Fireplace"))
-				{
-					if (GetZenSleepConfig().DebugOn)
-					{
-						FireplaceBase fire = FireplaceBase.Cast(nearest_object);
-
-						if (fire)
-						{
-							ZS_SendMessage("Fireplace detected, burning=" + fire.IsBurning());
-						}
-					}
-				}*/
-
-				if (nearbyObjectType.Contains("ClutterCutter")) // Ignore tent clutter-cutters that just remove grass as some tent cluttercutters share the same classname
+				if (nearbyObjectType.Contains("ClutterCutter")) // Ignore tent clutter-cutters that just remove grass as some tent cluttercutters contain the same classname as the tent itself
 				{
 					continue;
 				}
@@ -485,6 +496,11 @@ modded class PlayerBase
 				}
 			}
 		}
+
+		// This ensures that if multiple fires are found we detect if one is burning
+		m_FireNearby = litFireFound;
+
+		// This is used for tracking how many times we've scanned the nearby area for rest objects / fires
 		m_RestObjectChecks++;
 	}
 
@@ -492,6 +508,7 @@ modded class PlayerBase
 	void PlayerRestCheck(float deltaTime)
 	{
 		m_PlayerRestTick += deltaTime;
+		m_RestObjectTick += deltaTime;
 
 		if (m_PlayerRestTick < GetZenSleepConfig().RestUpdateTick)
 		{
@@ -505,7 +522,6 @@ modded class PlayerBase
 			if (IsUnconscious())
 			{
 				m_FallUnconsciousFromTiredness = false;
-
 			}
 
 			if (!IsPlayerSleeping()) // If player is not asleep, stop here and reset relevant sleep-tracking variables.
@@ -514,9 +530,13 @@ modded class PlayerBase
 			}
 
 			// Check if player is sleeping near a fire and/or rest object and apply any accelerator modifiers
-			GetNearbyRestObjectAccelerator();
+			if (m_RestObjectTick >= GetZenSleepConfig().RestUpdateTick * 4)
+			{
+				GetNearbyRestObjectAccelerator();
+				m_RestObjectTick = 0;
+			}
+
 			float restAccelerator = GetFireSleepAccelerator() + m_RestObjectAccelerator;
-			bool heatSource = m_Environment.GetTemperature() >= (float)GetZenSleepConfig().OutsideFireTemp;
 
 			// Calculate our rest as a percentage
 			int restPercent = Math.Round(100 - (float)m_Tiredness / MAX_TIREDNESS * 100);
@@ -537,7 +557,7 @@ modded class PlayerBase
 				}
 
 				// If there is no heat source nearby or adequately warm rest object (or heat buff), then inject the player with influenza randomly
-				if (!heatSource && m_RestObjectInfluenza && !m_HasHeatBuffer)
+				if (!m_FireNearby && m_RestObjectInfluenza && !m_HasHeatBuffer)
 				{
 					float randFlu = (float)Math.RandomIntInclusive(0, GetZenSleepConfig().InfluenzaInjectNoFire);
 
@@ -573,12 +593,12 @@ modded class PlayerBase
 					{
 						m_prevTirednessPercent = restPercent;
 						string warmCold = GetZenSleepConfig().Str_RestUpdate1; // and I'm cold...
-						if (!heatSource && m_HasHeatBuffer) // No fire, but we have the heat buff
+						if (!m_FireNearby && m_HasHeatBuffer) // No fire, but we have the heat buff
 						{
 							warmCold = GetZenSleepConfig().Str_RestUpdate2; // and I'm getting cold...
 						} 
 						else
-						if (heatSource) // Yes fire
+						if (m_FireNearby) // Yes fire
 						{
 							warmCold = GetZenSleepConfig().Str_RestUpdate3; // and I'm warm
 						}
@@ -588,7 +608,7 @@ modded class PlayerBase
 						}
 
 						// Yes fire inside + heat buff
-						if (GetFireSleepAccelerator() > (((float)GetZenSleepConfig().OutsideFireAcceleratorPercent / 100.0) + 1.0) && m_SleepingInside && m_HasHeatBuffer && heatSource)
+						if (GetFireSleepAccelerator() > (((float)GetZenSleepConfig().OutsideFireAcceleratorPercent / 100.0) + 1.0) && m_SleepingInside && m_HasHeatBuffer && m_FireNearby)
 						{
 							warmCold = GetZenSleepConfig().Str_RestUpdate4; // and I'm comfortably warm
 						}
@@ -601,7 +621,7 @@ modded class PlayerBase
 			// Debug message for dev purposes
 			if (GetZenSleepConfig().DebugOn)
 			{
-				string debugStr = "HeatSource=" + heatSource + " Temp=" + m_Environment.GetTemperature() + " IsNight=" + Zen_IsNightTime() + " Inside=" + m_SleepingInside + " RestAcc=" + restAccelerator + " RestAccum=" + m_SleepAccumulatorModifier + " Wet=" + GetStatWet().Get();
+				string debugStr = "HeatSource=" + m_FireNearby + " IsNight=" + Zen_IsNightTime() + " Inside=" + m_SleepingInside + " RestAcc=" + restAccelerator + " RestAccum=" + m_SleepAccumulatorModifier + " Wet=" + GetStatWet().Get();
 				ZS_SendMessage("My rest level is " + restPercent.ToString() + "% - " + debugStr);
 			}
 
@@ -629,7 +649,7 @@ modded class PlayerBase
 						}
 					}
 
-					if (!heatSource) // And there is no fire nearby
+					if (!m_FireNearby) // And there is no fire nearby
 					{
 						maxRest = Math.Max(GetZenSleepConfig().MaxRestNightNoFire, m_RestObjectMaxSleep);
 						if (restPercent >= maxRest && m_RestObjectChecks >= 1)
@@ -682,7 +702,7 @@ modded class PlayerBase
 						}
 					}
 
-					if (!heatSource) // And there is no fire nearby
+					if (!m_FireNearby) // And there is no fire nearby
 					{
 						maxRest = Math.Max(GetZenSleepConfig().MaxRestDayNoFire, m_RestObjectMaxSleep);
 						if (restPercent >= maxRest && m_RestObjectChecks >= 1)
@@ -747,7 +767,7 @@ modded class PlayerBase
 			PlayerYawnEffectCheck();
 		}
 
-		m_PlayerRestTick = 0; // Reset player rest tick counter (prevents checks being made unnecessarily often)
+		m_PlayerRestTick = 0; // Reset player tick counter (prevents checks being made unnecessarily often and lagging server/client)
 	}
 
 	// Checks if it is currently night time (adapted from PvZmoD night time checker code - credit to Liven! (https://steamcommunity.com/sharedfiles/filedetails/?id=2051775667)
@@ -788,6 +808,25 @@ modded class PlayerBase
 		}
 
 		return isNight;
+	}
+
+	// Adds/removes energy based on consumption item
+	override bool Consume(ItemBase source, float amount, EConsumeType consume_type)
+	{
+		EnergyDrink drink = GetZenSleepConfig().GetEnergyDrink(source.GetType());
+		if (drink.ItemType != "")
+		{
+			float percent = amount / source.GetQuantityMax();
+			float replenish = (float)MAX_TIREDNESS * (((float)drink.EnergyGained * percent) / 100);
+			InsertAgent(ZenSleep_Agents.TIREDNESS, replenish);
+
+			if (GetZenSleepConfig().DebugOn)
+			{
+				ZS_SendMessage("Giving energy: " + replenish);
+			}
+		}
+
+		return super.Consume(source, amount, consume_type);
 	}
 
 	// Cancels the sleep state
