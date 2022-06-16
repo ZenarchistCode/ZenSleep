@@ -544,7 +544,6 @@ modded class PlayerBase
 			// If we've been asleep for at least 30 seconds, check if we should play a random sleep sound and increase sleep accelerator
 			if (m_AccumulatedRest > 1 + REST_GAIN_PER_SEC * 30)
 			{
-
 				if (GetZenSleepConfig().WetnessCancelsFireAccelerator && GetStatWet().Get() <= 0) // If player is wet, don't sleep any faster
 				{
 					m_SleepAccumulatorModifier += GetZenSleepConfig().AsleepAccelerator;
@@ -862,6 +861,7 @@ modded class PlayerBase
 		{
 			if (m_YawnTime > 0)
 			{
+				SetTirednessVignette(0);
 				m_YawnTime = 0;
 			}
 
@@ -871,6 +871,7 @@ modded class PlayerBase
 		// If the current yawn time is 0 there's no need to update the black screen effect
 		if (m_YawnTime == 0)
 		{
+			SetTirednessVignette(0);
 			return;
 		}
 
@@ -979,12 +980,14 @@ modded class PlayerBase
 	}
 
 	// Triggers black screen blink when yawning/falling unconscious
+	bool m_StoppedSleepEffect = false;
 	void SetTirednessVignette(float val)
 	{
 		m_TirednessVignetteValue = val;
 
-		if (val)
+		if (val > 0)
 		{
+			m_StoppedSleepEffect = false;
 			float blur = val * 0.2;
 			float vignette = val;
 			float color_overlay_factor = val * 0.16;
@@ -1000,7 +1003,11 @@ modded class PlayerBase
 		}
 		else
 		{
-			PPERequesterBank.GetRequester(PPERequester_SleepEffect).Stop();
+			if (!m_StoppedSleepEffect)
+			{
+				PPERequesterBank.GetRequester(PPERequester_SleepEffect).Stop();
+				m_StoppedSleepEffect = true;
+			}
 		}
 	}
 }
