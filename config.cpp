@@ -56,6 +56,7 @@ class CfgMods
 				value="";
 				files[]=
 				{
+					"ZenSleep/scripts/common",
 					"ZenSleep/scripts/3_game"
 				};
 			};
@@ -64,6 +65,7 @@ class CfgMods
 				value="";
 				files[]=
 				{
+					"ZenSleep/scripts/common",
 					"ZenSleep/scripts/4_world"
 				};
 			};
@@ -72,6 +74,7 @@ class CfgMods
 				value="";
 				files[]=
 				{
+					"ZenSleep/scripts/common",
 					"ZenSleep/scripts/5_mission"
 				};
 			};
