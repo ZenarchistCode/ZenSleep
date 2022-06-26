@@ -812,19 +812,22 @@ modded class PlayerBase
 	// Adds/removes energy based on consumption item
 	override bool Consume(ItemBase source, float amount, EConsumeType consume_type)
 	{
-		EnergyDrink drink = GetZenSleepConfig().GetEnergyDrink(source.GetType());
-		if (drink.ItemType != "")
+		if (source)
 		{
-			float percent = amount / source.GetQuantityMax();
-			float replenish = (float)MAX_TIREDNESS * (((float)drink.EnergyGained * percent) / 100);
-			InsertAgent(ZenSleep_Agents.TIREDNESS, replenish);
-
-			if (GetZenSleepConfig().DebugOn)
+			EnergyDrink drink = GetZenSleepConfig().GetEnergyDrink(source.GetType());
+			if (drink.ItemType != "")
 			{
-				ZS_SendMessage("Giving energy: " + replenish);
+				float percent = amount / source.GetQuantityMax();
+				float replenish = (float)MAX_TIREDNESS * (((float)drink.EnergyGained * percent) / 100);
+				InsertAgent(ZenSleep_Agents.TIREDNESS, replenish);
+
+				if (GetZenSleepConfig().DebugOn)
+				{
+					ZS_SendMessage("Giving energy: " + replenish);
+				}
 			}
 		}
-
+		
 		return super.Consume(source, amount, consume_type);
 	}
 
