@@ -1,57 +1,69 @@
+===============================================================
 What Is This?
 
 This mod adds an immersive sleeping feature to the game.
 
-It is heavily based on and inspired by Lucian's old Medical Attention mod, so most of the credit goes to him.
+It is heavily based on and inspired by Lucian's old Medical Attention mod, so most of the credit goes to him (and ◣ ▲▼▲ for updating his mod to work with recent builds of DayZ).
 
-It has been designed to be as intuitive and immersive as possible, but keep reading to learn about all the various features and behaviors of this mod.
+It has been designed to be as intuitive and immersive as possible, but keep reading to learn about all the various features and behaviors of this mod. Much more info is in the included readme file.
 
+===============================================================
 Player Guide:
 
 The following information might vary depending on the server settings you're playing on, but with the default settings the mod will behave like this:
-You have approximately 4 hours of full energy on a new character.
-If your "tiredness" meter falls below 20%, your character will start yawning randomly. 
 
-These yawns are audible by other players like the vanilla sickness sounds and can give your position away, so stay rested!
+You have approximately 4-6 hours of full energy on a new character (real time, not server time).
+
+Your tiredness will deplete faster or slower depending on the activities you're doing.
+
+Sprinting around the map or basebuilding and carrying heavy items will result in you becoming tired faster, while taking it slow will result in a longer wake time.
+
+If your "tiredness" meter falls below 20%, your character will start yawning randomly.
+
+These yawns are audible to other players like the vanilla sickness sounds and can give your position away, so stay rested!
 
 If you allow your tiredness meter to fall below 10%, then you run the risk of randomly falling unconscious from tiredness.
 
 If you hit zero then your character will fall asleep on the spot.
 
-You can recover your rest using the "Lie Down" emote (NOT the "Lie Back" emote!).
+You can recover your rest using the "Lie Down" emote (NOT the "Lie Back" emote!)
 
 The longer you let your player stay sleeping, the faster your energy recovers.
 
-Sleeping next to a fire will not only protect you from potentially catching influenza, but will help you rest faster and recover more energy. You must be within 3 meters of the fire to feel its warmth. The heat buffer will also protect you from influenza.
+Sleeping next to a fire will not only protect you from potentially catching influenza, but will help you rest faster and recover more energy depending on the time of day.
 
-Sleeping inside a building or tent will also speed up your rest time.
+Sleeping inside buildings and tents will also allow you to recover energy faster. The fastest way to rest is in a building with a fire lit nearby (fire must be within 3 meters).
 
+===============================================================
+Rest Limits:
 During the day you can only recover 50% of your energy sleeping without a fire, or 75% with a fire.
 During the night you can only recover 80% of your energy sleeping without a fire, or 100% with a fire.
-Sleeping inside buildings and tents (especially with a fire lit nearby) is the best way to recover your energy quickly.
+Sleeping inside buildings and tents (especially with a fire nearby) is the best way to recover your energy quickly.
 
-If you are wet you might not be able to reach the maximum rest level, so make sure to dry your clothes out before sleeping.
+If your clothes are wet you might not be able to recover the maximum energy, so make sure to dry your clothes before sleeping.
 
-Certain drinks can help you recover your energy (soda cans). Certain meds will make you more sleepy (PO-X injectors especially, but also morphine & epinephrine).
+Certain drinks can also help you recover your energy (soda cans in particular). Certain meds will make you more sleepy (PO-X injectors especially, but also morphine & epinephrine).
 
 There are also some syringes you might find which you can use to keep yourself awake, or put other survivors to sleep...
 
-You can also fall asleep while driving (unless the server you play on has turned that option off), so make sure to utilize rest stops often on long drives.
+You can also fall asleep while driving (unless the server you play on has turned that option off), so make sure to utilize rest stops often on long drives!
 
 All of these features are adjustable on the server-side config so your experience may vary, make sure to check with your server operator for more info on how they set their server up with this mod.
 
-
-
-
-
+===============================================================
 Server Owner Guide:
 
-Main Sleep Mod Features (All Configurable in ZenSleepConfig.json):
+Here is a video explaining most of the features of this mod: Video Guide
+
+Main Sleep Mod Features
+(All Configurable in ZenSleepConfig.json):
 - Sleep meter (configurable: always show, only show on inventory screen, or only show above certain tiredness %)
-- Use "Lie Down" emote to start sleeping and regenerating tiredness energy
 - Random yawn sound when player gets tired (male & female sounds - audible to nearby players)
 - Chance to randomly fall unconscious when the player gets too tired
 - Random sleep sounds when player is resting (male & female sounds - audible to nearby players)
+- Adjust how quickly the player becomes tired based on various activities (climbing, running, swimming, carrying heavy items etc)
+- Enable/disable an immunity boost when fully rested (like taking a vitamin)
+- Recover blood and health faster when sleeping (can be adjusted or turned off in config).
 
 Max Rest While Sleeping:
 - 50% during the day with no fire
@@ -59,15 +71,17 @@ Max Rest While Sleeping:
 - 80% at night with no fire
 - 100% at night with a fire
 - Beware - if you sleep without a fire you might catch influenza (configurable)
-- Being wet affects your max rest level and influenza as well.
 
+===============================================================
 Other Notes:
+
 The mod will detect fires within 3m of the player, and if the fire is lit then it counts as a heat source.
 
 If you have issues with fires on certain maps or sleeping next to modded heat sources, try turning "HeatBuffCountsAsFire=true" on.
 
 Set DebugOn=1 in the config to get detailed messages explaining what the mod is doing and what values it is detecting.
 
+===============================================================
 Rest Accelerators:
 Depending on where you are sleeping will affect how quickly you regenerate energy. The mod can tell when you are sleeping under a roof and if you have a fire lit nearby.
 - Asleep Outside With No Fire = 1x
@@ -77,30 +91,30 @@ Depending on where you are sleeping will affect how quickly you regenerate energ
 
 Energy Drinks / Consumption Items:
 You can add your own energy drinks/consumption items in the json config. The default ones are:
-- Cola: +25% energy
-- Pipsi: +20% energy
-- Fronta: + 15% energy
-- Spite: +10% energy
-- Kvass: +5% energy
+- Epinpehrine: +25% rest
+- Cola: +25% rest
+- Pipsi: +20% rest
+- Fronta: + 15% rest
+- Spite: +10% rest
+- Kvass: +5% rest
 
 The mod checks for energy drink items and rest object types with a "contains" check and is not case-sensitive. A negative value increases energy, a positive value decreases energy. So in other words, if you want to make all soda cans restore 20% of your energy you can just set the JSON config to have this entry:
 
 {
-    "ItemType": "sodacan",
-    "EnergyGained": -20
+"ItemType": "sodacan",
+"EnergyGained": -20
 }
 
 Some meds will also negatively affect your energy:
-- AntiChemInjector (PO-X): -100% energy
-- Morphine: -20% energy
-- Epinephrine: -15% energy
+- AntiChemInjector (PO-X): -100% rest
+- Morphine: -20% rest
 
-Anaesthetic & Stimulant Syringes:
+Anesthetic & Stimulant Syringes:
 This mod also comes with 4 custom items:
-- Anaesthetic Syringe (and empty version)
-- Stimulant Syringe (and empty version)
+- Anesthetic Syringe (and "used" version)
+- Stimulant Syringe (and "used" version)
 
-The anaesthetic syringe puts the player to sleep (can be used on self or others).
+The anesthetic syringe puts the player to sleep (can be used on self or others).
 The stimulant syringe maxes out your rest energy (can be used on self or others).
 
 These syringes are optional and can be disabled by simply not adding the types to your types.xml.
@@ -108,16 +122,31 @@ These syringes are optional and can be disabled by simply not adding the types t
 (If you want to enable them spawning, just copy the text inside the provided types.xml from the mod folder and merge it into your server's types.xml)
 
 Rest Objects:
-You can add specific objects in the json config that affect how the player sleeps.
+You can add specific objects in the json config that affect how the player sleeps (such as sleeping bags, mattresses, beds etc).
 Note: This feature is still in development and doesn't work 100% of the time on some objects.
 - MediumTent: Max rest during the day with no fire is 80%, you sleep 10% faster and no chance of influenza regardless of fire status.
+
+===============================================================
+Important Notes:
+This mod is still in development and I'm not an experienced modder, so there may be issues with these early builds. Please be patient and also please let me know if you encounter any issues (and ideally as much info about what caused it as possible so I can investigate it and try to recreate it myself).
+
+There are a handful of minor quirks with the mod I'm still ironing out but so far I haven't discovered any major issues. More info is in the readme.
+
+Credits:
+Lucian & ◣ ▲▼▲
+
+Repacking:
+As with all my mods, you are free to repack or do whatever you like with this mod. But keep in mind that repacking will prevent my updates from being automatically applied, and this mod is still in development.
+
+Source Code:
+As with all my mods the source code is open-source and free to use however you like. You can find the code on my GitHub - www.zenarchist.io
 
 Default Mod Settings That Can Be Tweaked/Enabled/Disabled:
 
 ######################################################################
 MAIN CONFIG
 ######################################################################
-[MaxWakeTime=240] Maximum time the player can stay awake before they are forced uncon (in minutes - 4 hours by default)
+[MaxWakeTime=360] Maximum time the player can stay awake before they are forced uncon (in minutes - 4 hours by default)
 [AllowInventoryWhileSleep=false] Allows the player to access their inventory while sleeping (they can only move things around and can't put items into their hands)
 [CanUnconInVehicle=true] Whether or not players can fall asleep while driving
 [SleepBlackScreen=1] Screen turns black or blurry when sleeping (0 = off, 1 = black, 2 = blurry)
@@ -137,9 +166,9 @@ RANDOM CHANCE CONFIG
 ######################################################################
 INFLUENZA CONFIG
 ######################################################################
-[InfluenzaInjectNoFire=5] How much influenza to inject the player with when sleeping without a fire (random between 0 and this value - 1000 = max influenza)
-[InfluenzaMultiplierNightNoFire=1.5] Multiplies InfluenzaInjectNoFire value when sleeping at night without a fire
-[InfluenzaMultiplierWetNoFire] Multiplies InfluenzaInjectNoFire value when sleeping at night without a fire and with wet clothes
+[InfluenzaInjectNoFire=5] How much influenza to inject the player with on each tick when sleeping without a fire (random between 0 and this value - 1000 = max influenza)
+[InfluenzaMultiplierNightNoFire=1.5x] Multiplies InfluenzaInjectNoFire value when sleeping at night without a fire
+[InfluenzaMultiplierWetNoFire=2x] Multiplies InfluenzaInjectNoFire value when sleeping at night without a fire and with wet clothes
 ######################################################################
 MAX REST CONFIG
 ######################################################################
@@ -149,6 +178,7 @@ MAX REST CONFIG
 [MaxRestNightWithFire=100%] Maximum achievable rest % when sleeping during the night with a fire
 [MaxRestWhenWetDay=40] Maximum achievable rest % when sleeping with wet clothes during the day (regardless of fire)
 [MaxRestWhenWetNight=75] Maximum achievable rest % when sleeping with wet clothes during the night (regardless of fire)
+[ImmunityBoostAtRestLevel=100] Give the player immunity boost when this rest level is reached (like taking a vitamin - set 0 to disable)
 ######################################################################
 SLEEP ACCELERATOR CONFIG
 ######################################################################
@@ -159,6 +189,20 @@ SLEEP ACCELERATOR CONFIG
 [OutsideFireAcceleratorPercent=5%] You recover energy 5% faster when sleeping near a fire outside
 [InsideNoFireAcceleratorPercent=10%] You recover energy 10% faster when sleeping inside a building with no fire nearby
 [InsideFireAcceleratorPercent=25%] You recover energy 25% faster when sleeping inside a building with a fire nearby
+[HealthRegenAsleep=0.75] How much health to regenerate on each tick after sleeping for 30+ seconds (max health is 100)
+[BloodRegenAsleep=10] How much blood to regenerate on each tick after sleeping for 30+ seconds (max blood is 5000)
+######################################################################
+MOVEMENT PENALTY CONFIG
+######################################################################
+[EnableMovementPenalties=true] Set to 0 to disable movement penalties (this will make the player tired over time without being influenced by activities)
+[SprintUprightPenalty=1.2x] Player gets tired 20% faster when sprinting upright.
+[SprintCrouchedPenalty=1.15x] Player gets tired 15% faster when sprinting while crouched.
+[JoggingPenalty=1.10x] Player gets tired 10% faster while jogging.
+[ClimbSlowPenalty=1.5x] Player gets tired 50% faster while climbing ladders slowly.
+[ClimbFastPenalty=2x] Player gets tired 100% faster while climbing ladders quickly.
+[SwimSlowPenalty=1.5x] Player gets tired 50% faster while swimming slowly.
+[SwimFastPenalty=2x] Player gets tired 100% faster while swimming quickly.
+[WalkingHeavyItemPenalty=2x] Player gets tired 100% faster while carrying heavy objects (sheet metal, logs, basebuilding/storage items etc)
 ######################################################################
 NIGHT TIME CONFIG
 ######################################################################
@@ -178,12 +222,12 @@ LANGUAGE CONFIG
 ######################################################################
 GUI CONFIG
 ######################################################################
-[TirednessHudX=0.855] The horizontal X coordinate for the tiredness meter on the ingame HUD (set to 0.0 to move the sleep meter underneath the stamina meter)
+[TirednessHudX=0.855] The horizontal X coordinate for the tiredness meter on the ingame HUD (set to 0.0 to move the sleep meter underneath the stamina meter for example)
 [TirednessHudY=0.03] The vertical Y coordinate for the tiredness meter on the ingame HUD (don't touch this unless you have UI conflicts with other mods)
 ######################################################################
 DEBUG CONFIG
 ######################################################################
-[AdminSteam64ID] Your Steam 64 ID for your admin account (allows you to reload server config with a hotkey - find your ID at www.steamidfinder.com)
+[AdminSteam64ID] Your Steam 64 ID for your admin account (allows you to reload server config with a hotkey - find your ID at www.steamidfinder.com. Useful particularly for moving the TirednessHudX and Y)
 [DebugOn=0] - Off by default. Set to 1 to receive all debug messages, set to 2 to only receive debug messages while sleeping
 [RestUpdateTick=3] - Don't touch this unless you experience bad performance on high-pop servers. This affects how often all the above values are analyzed (3 secs by default).
 ######################################################################

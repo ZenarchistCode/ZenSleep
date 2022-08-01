@@ -1,6 +1,6 @@
 {
     "CONFIG_MAIN": "------------------------------------------------------------------------------------",
-    "MaxWakeTime": 240,
+    "MaxWakeTime": 360,
     "AllowInventoryWhileSleep": 0,
     "CanUnconInVehicle": 1,
     "SleepBlackScreen": 1,
@@ -20,12 +20,13 @@
     "InfluenzaMultiplierNightNoFire": 1.5,
     "InfluenzaMultiplierWetNoFire": 2.0,
     "CONFIG_MAX_REST": "--------------------------------------------------------------------------------",
-    "MaxRestDayNoFire": 50,
+    "MaxRestDayNoFire": 60,
     "MaxRestDayWithFire": 75,
     "MaxRestNightNoFire": 80,
     "MaxRestNightWithFire": 100,
-    "MaxRestWhenWetDay": 40,
+    "MaxRestWhenWetDay": 50,
     "MaxRestWhenWetNight": 75,
+    "ImmunityBoostAtRestLevel": 100,
     "CONFIG_ACCELERATOR": "-----------------------------------------------------------------------------",
     "HeatBuffCountsAsFire": 0,
     "WetnessCancelsFireAccelerator": 1,
@@ -34,6 +35,18 @@
     "OutsideFireAcceleratorPercent": 5,
     "InsideNoFireAcceleratorPercent": 10,
     "InsideFireAcceleratorPercent": 20,
+    "HealthRegenAsleep": 0.75,
+    "BloodRegenAsleep": 10.0,
+    "CONFIG_PENALTIES": "-------------------------------------------------------------------------------",
+    "EnableMovementPenalties": 1,
+    "SprintUprightPenalty": 1.2000000476837159,
+    "SprintCrouchedPenalty": 1.149999976158142,
+    "JoggingPenalty": 1.100000023841858,
+    "ClimbSlowPenalty": 1.5,
+    "ClimbFastPenalty": 2.0,
+    "SwimSlowPenalty": 1.5,
+    "SwimFastPenalty": 2.0,
+    "WalkingHeavyItemPenalty": 2.0,
     "CONFIG_NIGHT": "-----------------------------------------------------------------------------------",
     "NightTimeStartHour": 0,
     "NightTimeStartMin": 0,
@@ -43,11 +56,11 @@
     "EnergyDrinks": [
         {
             "ItemType": "SodaCan_Pipsi",
-            "EnergyGained": -20
+            "EnergyGained": -15
         },
         {
             "ItemType": "SodaCan_Cola",
-            "EnergyGained": -25
+            "EnergyGained": -20
         },
         {
             "ItemType": "SodaCan_Spite",
@@ -59,11 +72,11 @@
         },
         {
             "ItemType": "SodaCan_Fronta",
-            "EnergyGained": -15
+            "EnergyGained": -10
         },
         {
             "ItemType": "Epinephrine",
-            "EnergyGained": 10
+            "EnergyGained": -25
         },
         {
             "ItemType": "Morphine",
@@ -105,6 +118,8 @@
             "Influenza": 0
         }
     ],
+    "UsedStimSyringeType": "ZenSleep_Empty_StimSyringe",
+    "UsedSleepSyringeType": "ZenSleep_Empty_Syringe",
     "CONFIG_TEXT": "------------------------------------------------------------------------------------",
     "Str_RestUpdate": "My rest level is",
     "Str_RestUpdate1": "and I'm cold...",
@@ -122,8 +137,8 @@
     "Str_CantSleep5": "I don't think I can sleep any longer, my clothes are wet and I'm cold...",
     "CONFIG_DEBUG": "-----------------------------------------------------------------------------------",
     "TirednessHudX": 0.8550000190734863,
-    "TirednessHudY": 0.029999999329447748,
+    "TirednessHudY": 0.019999999552965165,
     "AdminSteam64ID": "www.steamidfinder.com",
-    "DebugOn": 1,
+    "DebugOn": 0,
     "RestUpdateTick": 3
 }

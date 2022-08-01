@@ -7,6 +7,7 @@ modded class PlayerBase
 	bool m_IsSleeping = false; // Tracks whether the player is lying down and resting
 	bool m_CantSleep = false; // When this is true, the player wakes up but stays lying down (ie. when max rest is reached)
 	bool m_SleepingInside = false; // This affects our sleep accelerator modifier but is only checked when sleeping
+	bool m_SleepImmunityActivated = false; // This is used to enable sleep immunity boost (if enabled in server config)
 	int m_TirednessUpdateCountdown = 0; // Used to countdown ticks between sending sleep % update message
 	float m_PlayerRestTick = 1; // Current tick for the player checker function
 	float m_RestObjectTick = 1; // Current tick for the rest object checker function
@@ -36,8 +37,8 @@ modded class PlayerBase
 	bool m_IsUnconsciousFromTiredness = false; // This tracks on the server & client if the player is uncon from tiredness
 	bool m_OnlyShowSleepOnInventory = false; // This tracks whether or not to only show the sleep meter while tabbed
 	bool m_HideHudWhileSleeping = true; // Hide the left-hand HUD while sleeping?
-	float m_TirednessHudX = 100.0; // Tiredness GUI HUD x position (needs server-side instructions to move it)
-	float m_TirednessHudY = 100.0; // Tiredness GUI HUD y position (needs server-side instructions to move it)
+	float m_TirednessHudX = 0.855; // Tiredness GUI HUD x position (needs server-side instructions to move it)
+	float m_TirednessHudY = 0.03; // Tiredness GUI HUD y position (needs server-side instructions to move it)
 
 	// Client-side & server-side no sync variables
 	bool m_WasSleeping = false; // Tracks the player's sleep state to enable/disable the black screen
@@ -254,6 +255,7 @@ modded class PlayerBase
 		m_RestObjectChecks = 0;
 		m_RestObjectInfluenza = true;
 		m_FireNearby = false;
+		m_SleepImmunityActivated = false;
 
 		// Check for a fire/rest object nearby
 		GetNearbyRestObjectAccelerator();
@@ -510,13 +512,13 @@ modded class PlayerBase
 		m_PlayerRestTick += deltaTime;
 		m_RestObjectTick += deltaTime;
 
-		if (m_PlayerRestTick < GetZenSleepConfig().RestUpdateTick)
-		{
-			return;
-		}
-
 		if (GetGame().IsServer() && GetGame().IsMultiplayer()) // Server-side update
 		{
+			if (m_PlayerRestTick < GetZenSleepConfig().RestUpdateTick)
+			{
+				return;
+			}
+
 			m_Tiredness = GetSingleAgentCount(ZenSleep_Agents.TIREDNESS);
 
 			if (IsUnconscious())
@@ -524,9 +526,12 @@ modded class PlayerBase
 				m_FallUnconsciousFromTiredness = false;
 			}
 
-			if (!IsPlayerSleeping()) // If player is not asleep, stop here and reset relevant sleep-tracking variables.
+			// Calculate our rest as a percentage
+			int restPercent = Math.Round(100 - (float)m_Tiredness / MAX_TIREDNESS * 100);
+
+			if (!IsPlayerSleeping()) 
 			{
-				return;
+				return; // If player is not asleep, stop here and reset relevant sleep-tracking variables.
 			}
 
 			// Check if player is sleeping near a fire and/or rest object and apply any accelerator modifiers
@@ -538,12 +543,13 @@ modded class PlayerBase
 
 			float restAccelerator = GetFireSleepAccelerator() + m_RestObjectAccelerator;
 
-			// Calculate our rest as a percentage
-			int restPercent = Math.Round(100 - (float)m_Tiredness / MAX_TIREDNESS * 100);
-
 			// If we've been asleep for at least 30 seconds, check if we should play a random sleep sound and increase sleep accelerator
 			if (m_AccumulatedRest > 1 + REST_GAIN_PER_SEC * 30)
 			{
+				// Regen blood & health faster while asleep (if it's turned on in config)
+				RegenBlood();
+				RegenHealth();
+
 				if (GetZenSleepConfig().WetnessCancelsFireAccelerator && GetStatWet().Get() <= 0) // If player is wet, don't sleep any faster
 				{
 					m_SleepAccumulatorModifier += GetZenSleepConfig().AsleepAccelerator;
@@ -644,6 +650,7 @@ modded class PlayerBase
 							}
 
 							m_CantSleep = true;
+							CheckSleepImmunityBoost(restPercent);
 							return;
 						}
 					}
@@ -662,6 +669,7 @@ modded class PlayerBase
 							}
 
 							m_CantSleep = true;
+							CheckSleepImmunityBoost(restPercent);
 							return;
 						}
 					}
@@ -679,6 +687,7 @@ modded class PlayerBase
 							}
 
 							m_CantSleep = true;
+							CheckSleepImmunityBoost(restPercent);
 							return;
 						}
 					}
@@ -697,6 +706,7 @@ modded class PlayerBase
 							}
 
 							m_CantSleep = true;
+							CheckSleepImmunityBoost(restPercent);
 							return;
 						}
 					}
@@ -712,6 +722,7 @@ modded class PlayerBase
 							}
 
 							m_CantSleep = true;
+							CheckSleepImmunityBoost(restPercent);
 							return;
 						}
 					}
@@ -726,6 +737,7 @@ modded class PlayerBase
 							}
 
 							m_CantSleep = true;
+							CheckSleepImmunityBoost(restPercent);
 							return;
 						}
 					}
@@ -767,6 +779,20 @@ modded class PlayerBase
 		}
 
 		m_PlayerRestTick = 0; // Reset player tick counter (prevents checks being made unnecessarily often and lagging server/client)
+	}
+
+	// Checks if the player has achieved the minimum rest level for a sleep immunity boost
+	void CheckSleepImmunityBoost(float restPercent)
+	{
+		// Activate immunity boost if enabled in config and player has reached the necessary rest level to achieve it
+		if (GetZenSleepConfig().ImmunityBoostAtRestLevel != 0 && restPercent >= GetZenSleepConfig().ImmunityBoostAtRestLevel && !m_SleepImmunityActivated)
+		{
+			if (GetModifiersManager() && GetModifiersManager().IsModifierActive(eModifiers.MDF_IMMUNITYBOOST))
+				return;
+
+			GetModifiersManager().ActivateModifier(eModifiers.MDF_IMMUNITYBOOST);
+			m_SleepImmunityActivated = true;
+		}
 	}
 
 	// Checks if it is currently night time (adapted from PvZmoD night time checker code - credit to Liven! (https://steamcommunity.com/sharedfiles/filedetails/?id=2051775667)
@@ -847,6 +873,24 @@ modded class PlayerBase
 	{
 		super.OnScheduledTick(deltaTime);
 		PlayerRestCheck(deltaTime);
+	}
+
+	// Regen blood faster (if enabled in config)
+	void RegenBlood()
+	{
+		if (!IsPlayerSleeping() || GetZenSleepConfig().BloodRegenAsleep <= 0)
+			return;
+
+		AddHealth("", "Blood", GetZenSleepConfig().BloodRegenAsleep);
+	}
+
+	// Regen health faster (if enabled in config)
+	void RegenHealth()
+	{
+		if (!IsPlayerSleeping() || GetZenSleepConfig().HealthRegenAsleep <= 0)
+			return;
+
+		AddHealth("GlobalHealth", "Health", GetZenSleepConfig().HealthRegenAsleep);
 	}
 
 	// Handles game commands

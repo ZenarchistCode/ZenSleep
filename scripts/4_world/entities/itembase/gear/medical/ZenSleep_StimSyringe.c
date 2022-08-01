@@ -33,7 +33,7 @@ class ZenSleep_StimSyringe : Inventory_Base
 		player.InsertAgent(ZenSleep_Agents.TIREDNESS, penalty);
 
 		// Drop used syringe
-		ItemBase junk = ItemBase.Cast(GetGame().CreateObjectEx("ZenSleep_Empty_StimSyringe", player.GetPosition(), ECE_PLACE_ON_SURFACE));
+		ItemBase junk = ItemBase.Cast(GetGame().CreateObjectEx(GetZenSleepConfig().UsedStimSyringeType, player.GetPosition(), ECE_PLACE_ON_SURFACE));
 		if (junk)
 		{
 			junk.SetHealth("", "Health", 1);
