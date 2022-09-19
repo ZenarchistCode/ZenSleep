@@ -1,8 +1,14 @@
 class ZenSleepConfig
 {
+	// Set actual config version (doesn't save to json)
+	private static const string CONFIG_VERSION = "2";
+
 	// Config location
 	private const static string zenModFolder = "$profile:\\Zenarchist\\";
-	private const static string zenConfigName = "ZenSleepConfig_v2.json";
+	private const static string zenConfigName = "ZenSleepConfig.json";
+
+	// Config version 
+	string ConfigVersion = "";
 
 	// Main config data
 	string CONFIG_MAIN = "------------------------------------------------------------------------------------";
@@ -106,33 +112,44 @@ class ZenSleepConfig
 	// Load config file or create default file if config doesn't exsit
 	void Load() 
 	{
-		if (GetGame().IsServer()) 
-		{
-			if (FileExist(zenModFolder + zenConfigName))
-			{ // If config exists, load file
-				JsonFileLoader<ZenSleepConfig>.JsonLoadFile(zenModFolder + zenConfigName, this);
-			}
-			else // Config file does not exist, create default file
+		if (FileExist(zenModFolder + zenConfigName))
+		{	// If config exists, load file
+			JsonFileLoader<ZenSleepConfig>.JsonLoadFile(zenModFolder + zenConfigName, this);
+
+			// If version mismatch, backup old version of json before replacing it
+			if (ConfigVersion != CONFIG_VERSION)
 			{
-				// Save default settings for energy drinks
-				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Pipsi", -15));
-				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Cola", -20));
-				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Spite", -10));
-				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Kvass", -5));
-				EnergyDrinks.Insert(new EnergyDrink("SodaCan_Fronta", -10));
-				EnergyDrinks.Insert(new EnergyDrink("Epinephrine", -25));
-				EnergyDrinks.Insert(new EnergyDrink("Morphine", 20));
-				EnergyDrinks.Insert(new EnergyDrink("AntiChemInjector", 100));
-				EnergyDrinks.Insert(new EnergyDrink("ZenSleep_Syringe", 100));
-				EnergyDrinks.Insert(new EnergyDrink("ZenSleep_StimSyringe", -100));
-				// Save default settings for rest objects
-				RestObjects.Insert(new RestObject("MediumTent", 80, 100, 10, 0));
-				RestObjects.Insert(new RestObject("MSP_SleepingBag", 80, 100, 10, 0));
-				RestObjects.Insert(new RestObject("MSP_Mattress", 80, 100, 10, 0));
-				// Save config
-				Save();
+				JsonFileLoader<ZenSleepConfig>.JsonSaveFile(zenModFolder + zenConfigName + "_old", this);
+			}
+			else
+			{
+				// Config exists and version matches, stop here.
+				return;
 			}
 		}
+
+		// Config file does not exist, create default file
+		ConfigVersion = CONFIG_VERSION;
+
+		// Save default settings for energy drinks
+		EnergyDrinks.Insert(new EnergyDrink("SodaCan_Pipsi", -15));
+		EnergyDrinks.Insert(new EnergyDrink("SodaCan_Cola", -20));
+		EnergyDrinks.Insert(new EnergyDrink("SodaCan_Spite", -10));
+		EnergyDrinks.Insert(new EnergyDrink("SodaCan_Kvass", -5));
+		EnergyDrinks.Insert(new EnergyDrink("SodaCan_Fronta", -10));
+		EnergyDrinks.Insert(new EnergyDrink("Epinephrine", -25));
+		EnergyDrinks.Insert(new EnergyDrink("Morphine", 20));
+		EnergyDrinks.Insert(new EnergyDrink("AntiChemInjector", 100));
+		EnergyDrinks.Insert(new EnergyDrink("ZenSleep_Syringe", 100));
+		EnergyDrinks.Insert(new EnergyDrink("ZenSleep_StimSyringe", -100));
+		// Save default settings for rest objects
+		RestObjects.Insert(new RestObject("MediumTent", 80, 100, 10, 0));
+		RestObjects.Insert(new RestObject("MSP_SleepingBag", 80, 100, 10, 0));
+		RestObjects.Insert(new RestObject("MSP_Mattress", 80, 100, 10, 1));
+		RestObjects.Insert(new RestObject("bl_pallet_bed_s", 80, 100, 20, 0));
+		RestObjects.Insert(new RestObject("bl_pallet_bed_m", 80, 100, 25, 0));
+		// Save config
+		Save();
 	}
 
 	// Save config
@@ -223,7 +240,7 @@ ref ZenSleepConfig m_ZenSleepConfig;
 // Helper function to return Config data storage object
 static ZenSleepConfig GetZenSleepConfig()
 {
-	if(!m_ZenSleepConfig && GetGame().IsServer())
+	if(!m_ZenSleepConfig && GetGame().IsDedicatedServer())
 	{
 		Print("[ZenSleepConfig] Init");
 		m_ZenSleepConfig = new ZenSleepConfig;

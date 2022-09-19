@@ -52,9 +52,6 @@ modded class PlayerBase
 	EffectSound yawnSoundEffect = NULL; // Used for playing the yawn sounds
 	EffectSound sleepSoundEffect = NULL; // Used for playing the sleep sounds
 
-	// RPC variables (Client-side & server-side)
-	bool m_ReceivedSleepData = false;
-
 	// Create player
 	void PlayerBase() { }
 
@@ -71,7 +68,7 @@ modded class PlayerBase
 	void ZS_SendMessage(string message)
 	{
 		Param1<string> m_MessageParam = new Param1<string>("");
-		if (GetGame().IsServer() && m_MessageParam && IsAlive() && message != "" && !IsPlayerDisconnected())
+		if (GetGame().IsDedicatedServer() && m_MessageParam && IsAlive() && message != "" && !IsPlayerDisconnected())
 		{
 			m_MessageParam.param1 = message;
 			GetGame().RPCSingleParam(this, ERPCs.RPC_USER_ACTION_MESSAGE, m_MessageParam, true, GetIdentity());
@@ -94,28 +91,20 @@ modded class PlayerBase
 		m_Mod_ModulePlayerStatus = PluginPlayerStatus.Cast(GetPlugin(PluginPlayerStatus));
 	}
 
-	// Triggered on connect to server
-	//override void OnConnect()
-	//{
-	//	super.OnConnect();
-	//}
-
 	// Called when the player is loaded
 	override void OnPlayerLoaded()
 	{
 		super.OnPlayerLoaded();
 
-		if (GetGame().IsServer())
+		if (GetGame().IsDedicatedServer())
 		{
-			// Set client-side config from server
-			LoadServerConfig();
-			ZenSleep_SyncState();
-			ScheduleSleepDataUpdate(false);
+			// Send server-side data to client
+			ScheduleSleepDataUpdate();
 		}
 	}
 
 	// (Server-side) Sets the server-side settings that the player client must sync
-	void LoadServerConfig()
+	void SyncServerConfig()
 	{
 		// Bools
 		m_OnlyShowSleepOnInventory = GetZenSleepConfig().OnlyShowSleepOnInventory;
@@ -131,32 +120,24 @@ modded class PlayerBase
 		m_TirednessHudY = GetZenSleepConfig().TirednessHudY;
 	}
 
-	// (Server-side) Queue repetitive sending of server-side settings to ensure the data gets sent every 5 secs until it's confirmed it was received
-	void ScheduleSleepDataUpdate(bool sendImmediately)
+	// (Server-side) Queue sending of server-side settings
+	void ScheduleSleepDataUpdate()
 	{
-		if (sendImmediately) // This is only true if the player is a server admin and has requested a re-load of the json config
-		{
-			LoadServerConfig();
-			SendSleepDataToClient();
-		}
-
-		GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(SendSleepDataToClient, 5000, true);
+		SyncServerConfig();
+		SendSleepDataToClient();
+		GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(SendSleepDataToClient, 5000, false);
 	}
 
 	// (Server-side) Sends an RPC containing all of the server-side sleep config settings that the client needs to be aware of
 	void SendSleepDataToClient()
 	{
-		if (!m_ReceivedSleepData) // If the player has not yet received the server-side config setting data, send it
+		if (this && !this.IsPlayerDisconnected())
 		{
 			GetRPCManager().SendRPC("ZS_RPC", "RPC_SendSleepDataToClient", new Param7< bool, bool, bool, bool, int, float, float >(m_OnlyShowSleepOnInventory, m_HideHudWhileSleeping, m_AllowInventoryWhileSleep, m_OnlyBlurScreen, m_OnlyShowSleepAbovePercent, m_TirednessHudX, m_TirednessHudY), true, this.GetIdentity());
 		}
-		else // Otherwise, if the client has confirmed that they've received it, stop repeatedly sending it.
-		{
-			GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).Remove(this.SendSleepDataToClient);
-		}
 	}
 
-	// (Client-side) Sends an RPC requesting the server to reload the ZenSleep config
+	// (Client-side) Sends an admin RPC requesting the server to reload the ZenSleep config
 	void RequestServerConfigReload()
 	{
 		GetRPCManager().SendRPC("ZS_RPC", "RPC_SendReloadConfigRequestToServer", new Param1< PlayerBase >(this), true, NULL);
@@ -271,10 +252,34 @@ modded class PlayerBase
 	bool IsPlayerSleeping()
 	{
 		bool isSleeping = true;
+		
+		// Check for cancel sleep and can't sleep conditions, and sleep emote/actions
 		if (m_CancelSleep || m_CantSleep || !m_EmoteManager || !m_EmoteManager.m_bEmoteIsPlaying || !m_EmoteManager.m_Callback || m_EmoteManager.m_Callback.m_callbackID != DayZPlayerConstants.CMD_GESTUREFB_LYINGDOWN)
 		{
-			isSleeping = false;
-			m_CancelSleep = false;
+			// Check for modded actions that cause player to lie down (eg. BoomLay's Things modded beds)
+			ActionManagerBase amb = GetActionManager();
+			if (amb && amb.GetRunningAction() && !m_CantSleep)
+			{
+				AnimatedActionBase aab = AnimatedActionBase.Cast(amb.GetRunningAction());
+				if (aab)
+				{
+					if (aab.GetActionCommandZENSLEEP(this) != DayZPlayerConstants.CMD_GESTUREFB_LYINGDOWN) // Current action is not a sleep action.
+					{
+						isSleeping = false;
+						m_CancelSleep = false;
+					}
+				}
+				else // No animated action found, we are not asleep.
+				{
+					isSleeping = false;
+					m_CancelSleep = false;
+				}
+			}
+			else // No current sleeping action found, we are not asleep.
+			{
+				isSleeping = false;
+				m_CancelSleep = false;
+			}
 		}
 
 		if (!isSleeping && m_IsUnconsciousFromTiredness)
@@ -381,16 +386,7 @@ modded class PlayerBase
 			return;
 		}
 
-		// This code is taken from CheckUnderRoof() in DayZ/Environment.c
-		float hitFraction;
-		vector hitPosition, hitNormal;
-		vector from = GetPosition();
-		vector to = from + "0 25 0";
-		Object hitObject;
-		PhxInteractionLayers collisionLayerMask = PhxInteractionLayers.ITEM_LARGE | PhxInteractionLayers.BUILDING | PhxInteractionLayers.VEHICLE;
-
-		// Do some fancy DayZ 3D math to see if a roof is above us
-		m_SleepingInside = DayZPhysics.RayCastBullet(from, to, collisionLayerMask, null, hitObject, hitPosition, hitNormal, hitFraction) && IsSoundInsideBuilding();
+		m_SleepingInside = MiscGameplayFunctions.IsUnderRoof(this) && IsSoundInsideBuilding();
 	}
 
 	// Returns the standard sleep accelerator modifier based on the player's current environment
@@ -512,7 +508,7 @@ modded class PlayerBase
 		m_PlayerRestTick += deltaTime;
 		m_RestObjectTick += deltaTime;
 
-		if (GetGame().IsServer() && GetGame().IsMultiplayer()) // Server-side update
+		if (GetGame().IsDedicatedServer() && GetGame().IsMultiplayer()) // Server-side update
 		{
 			if (m_PlayerRestTick < GetZenSleepConfig().RestUpdateTick)
 			{
@@ -541,10 +537,11 @@ modded class PlayerBase
 				m_RestObjectTick = 0;
 			}
 
+			bool asleepFor30Secs = m_AccumulatedRest > 1 + REST_GAIN_PER_SEC * 30;
 			float restAccelerator = GetFireSleepAccelerator() + m_RestObjectAccelerator;
 
 			// If we've been asleep for at least 30 seconds, check if we should play a random sleep sound and increase sleep accelerator
-			if (m_AccumulatedRest > 1 + REST_GAIN_PER_SEC * 30)
+			if (asleepFor30Secs)
 			{
 				// Regen blood & health faster while asleep (if it's turned on in config)
 				RegenBlood();
@@ -650,7 +647,6 @@ modded class PlayerBase
 							}
 
 							m_CantSleep = true;
-							CheckSleepImmunityBoost(restPercent);
 							return;
 						}
 					}
@@ -669,7 +665,6 @@ modded class PlayerBase
 							}
 
 							m_CantSleep = true;
-							CheckSleepImmunityBoost(restPercent);
 							return;
 						}
 					}
@@ -687,7 +682,10 @@ modded class PlayerBase
 							}
 
 							m_CantSleep = true;
-							CheckSleepImmunityBoost(restPercent);
+							
+							if (asleepFor30Secs)
+								CheckSleepImmunityBoost(restPercent);
+
 							return;
 						}
 					}
@@ -706,7 +704,6 @@ modded class PlayerBase
 							}
 
 							m_CantSleep = true;
-							CheckSleepImmunityBoost(restPercent);
 							return;
 						}
 					}
@@ -722,7 +719,6 @@ modded class PlayerBase
 							}
 
 							m_CantSleep = true;
-							CheckSleepImmunityBoost(restPercent);
 							return;
 						}
 					}
@@ -737,7 +733,10 @@ modded class PlayerBase
 							}
 
 							m_CantSleep = true;
-							CheckSleepImmunityBoost(restPercent);
+
+							if (asleepFor30Secs)
+								CheckSleepImmunityBoost(restPercent);
+
 							return;
 						}
 					}
@@ -898,7 +897,7 @@ modded class PlayerBase
 	{
 		super.CommandHandler(pDt,pCurrentCommandID,pCurrentCommandFinished);
 
-		if (GetGame().IsServer() && GetGame().IsMultiplayer())
+		if (GetGame().IsDedicatedServer() && GetGame().IsMultiplayer())
 		{
 			return;
 		}

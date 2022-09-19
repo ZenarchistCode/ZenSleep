@@ -5,6 +5,10 @@
 			<input name="UAZenSleep_SleepKey" loc="STR_ZenSleep_SleepKey_Txt" />
 			<input name="UAZenSleep_RefreshConfig" loc="STR_ZenSleep_RefreshConfig_Txt" />
 		</actions>
+		<sorting name="ZEN" loc="ZEN">
+			<input name="UAZenSleep_SleepKey"/>
+			<input name="UAZenSleep_RefreshConfig"/>
+		</sorting>
 	</inputs>
     <preset>
 		<input name="UAZenSleep_SleepKey">

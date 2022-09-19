@@ -9,6 +9,7 @@ modded class IngameHud
 	Widget m_SleepModHudPanel = NULL;
 	float m_SleepHudX = 0.855; // Tiredness HUD location on the GUI - can be overridden by server config
 	float m_SleepHudY = 0.02; // Tiredness HUD location on the GUI - can be overridden by server config
+	bool m_ShowGameHUD = true;
 
 	// Initialize the relevant widgets for this mod
 	override void Init(Widget hud_panel_widget)
@@ -60,6 +61,12 @@ modded class IngameHud
 	// Updates the tiredness hud visibility based on the relevant conditions
 	void SetHudVisibility()
 	{
+		if (!m_ShowGameHUD)
+		{
+			m_SleepModHudPanel.Show(false);
+			return;
+		}
+
 		// Check if only show while tabbed is enabled from server config and if our inventory is open
 		bool overrideSleep = true;
 		PlayerBase player;
@@ -126,5 +133,12 @@ modded class IngameHud
 				m_Presence.Show(shouldShow);
 			}
 		}
+	}
+
+	// Ensures that we hide the sleep HUD whenever the main HUD is hidden
+	override void Show(bool show)
+	{
+		super.Show(show);
+		m_ShowGameHUD = show;
 	}
 }

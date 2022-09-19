@@ -61,8 +61,6 @@ modded class MissionBase extends MissionBaseWorld
 				return;
 			}
 
-			dataPlayer.param1.m_ReceivedSleepData = true; // Set the received flag so we can stop sending the config data to the player
-
 			if (GetZenSleepConfig().DebugOn)
 			{
 				dataPlayer.param1.ZS_SendMessage("Successfully sync'd ZenSleep config :)");
@@ -107,8 +105,7 @@ modded class MissionBase extends MissionBaseWorld
 			Class.CastTo(player, all_players.Get(i));
 			if (player)
 			{
-				player.m_ReceivedSleepData = false;
-				player.ScheduleSleepDataUpdate(true);
+				player.ScheduleSleepDataUpdate();
 			}
 		}
 	}
