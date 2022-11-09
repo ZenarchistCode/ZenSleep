@@ -3,6 +3,7 @@ modded class PlayerBase
 	// Server-side variables
 	static const int MAX_TIREDNESS = 1000; // The maximum amount our m_Tiredness reading can reach
 	static const float REST_GAIN_PER_SEC = 0.023; // How much rest we recover per second when sleeping
+	bool m_JustStartedSleeping = false; // This tracks our sleep state so that we can reset all sleep variables when player begins a new sleep
 	bool m_CancelSleep = false; // Overrides/cancels sleeping state
 	bool m_IsSleeping = false; // Tracks whether the player is lying down and resting
 	bool m_CantSleep = false; // When this is true, the player wakes up but stays lying down (ie. when max rest is reached)
@@ -41,6 +42,7 @@ modded class PlayerBase
 	float m_TirednessHudY = 0.03; // Tiredness GUI HUD y position (needs server-side instructions to move it)
 
 	// Client-side & server-side no sync variables
+	bool m_ReceivedSleepConfig = false; // Tracks whether or not sleep server config was received by client yet
 	bool m_WasSleeping = false; // Tracks the player's sleep state to enable/disable the black screen
 	float m_YawnTime = 0; // Used for governing the speed of the black screen blink effect.
 	int m_LastYawn = 0; // Used for triggering the yawn black screen effect.
@@ -474,7 +476,7 @@ modded class PlayerBase
 					}
 
 					if (ro.SleepAcceleratorPercent != 0 && ro.SleepAcceleratorPercent > m_RestObjectAccelerator)
-					{ // Apply highest sleep accelerator if multiple objects are found
+					{	// Apply highest sleep accelerator if multiple objects are found
 						m_RestObjectAccelerator = ro.SleepAcceleratorPercent / 100;
 						m_RestObjectInfluenza = ro.Influenza;
 						if (Zen_IsNightTime())
@@ -538,7 +540,11 @@ modded class PlayerBase
 			}
 
 			bool asleepFor30Secs = m_AccumulatedRest > 1 + REST_GAIN_PER_SEC * 30;
-			float restAccelerator = GetFireSleepAccelerator() + m_RestObjectAccelerator;
+
+
+			float restAccelerator = 1.0;
+			if (asleepFor30Secs)
+				restAccelerator = GetFireSleepAccelerator() + m_RestObjectAccelerator;
 
 			// If we've been asleep for at least 30 seconds, check if we should play a random sleep sound and increase sleep accelerator
 			if (asleepFor30Secs)

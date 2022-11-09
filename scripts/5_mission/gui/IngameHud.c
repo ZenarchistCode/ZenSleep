@@ -71,7 +71,7 @@ modded class IngameHud
 		bool overrideSleep = true;
 		PlayerBase player;
 		PlayerBase.CastTo(player, GetGame().GetPlayer());
-		if (!player || !player.IsAlive())
+		if (!player || !player.IsAlive() || !player.m_ReceivedSleepConfig)
 		{
 			if (m_TirednessIconPanel && m_TirednessBarPanel)
 			{
@@ -97,13 +97,10 @@ modded class IngameHud
 			overrideSleep = player.m_IsSleeping || m_HudInventory;
 		}
 
-		// If we have only show above certain tiredness percent on, check the threshold
+		// If we have only show above certain tiredness percent turned on, check the threshold
 		if (player.m_OnlyShowSleepAbovePercent != 0)
 		{
-			if (player.GetTiredPercent() < (float)player.m_OnlyShowSleepAbovePercent)
-			{
-				overrideSleep = player.m_IsSleeping || m_HudInventory;
-			}
+			overrideSleep = player.m_IsSleeping || m_HudInventory || player.GetTiredPercent() > (float)player.m_OnlyShowSleepAbovePercent;
 		}
 
 		// Check if this hud should be visible with the rest of the player hud

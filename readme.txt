@@ -258,7 +258,6 @@ To implement all of these changes into your server config, update the mod and th
 - Improved text notifications for how warm the player is
 - Accidentally uploaded first version with 2/3 same male yawn sounds (fixed)
 ----------------------------------------------------------------------
-----------------------------------------------------------------------
 15th June 2022:
 ----------------------------------------------------------------------
 - Changed fireplace detection from temperature-based to object-based (should now work on all maps regardless of ambient temperature)

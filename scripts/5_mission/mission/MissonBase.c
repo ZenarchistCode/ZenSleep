@@ -42,28 +42,10 @@ modded class MissionBase extends MissionBaseWorld
 				// Floats
 				player.m_TirednessHudX = data.param6;
 				player.m_TirednessHudY = data.param7;
+				player.m_ReceivedSleepConfig = true;
 
 				// Tell server we've confirmed that we've received the config data
 				GetRPCManager().SendRPC("ZS_RPC", "RPC_SendReceivedSleepDataToServer", new Param1< PlayerBase >(player), true, NULL);
-			}
-		}
-	}
-
-	// This is used by the client to tell the server it successfully received the server-side config sync
-	void RPC_SendReceivedSleepDataToServer(CallType type, ref ParamsReadContext ctx, ref PlayerIdentity sender, ref Object target)
-	{
-		if (type == CallType.Server && GetGame().IsDedicatedServer())
-		{
-			Param1 <PlayerBase> dataPlayer;
-			if (!ctx.Read(dataPlayer))
-			{
-				Print("[ZenSleep] Error sync'ing client-side data to server in RPC_SendReceivedSleepDataToServer");
-				return;
-			}
-
-			if (GetZenSleepConfig().DebugOn)
-			{
-				dataPlayer.param1.ZS_SendMessage("Successfully sync'd ZenSleep config :)");
 			}
 		}
 	}
