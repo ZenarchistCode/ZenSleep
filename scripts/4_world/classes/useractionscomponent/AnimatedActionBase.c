@@ -13,4 +13,19 @@ modded class AnimatedActionBase
 
 		return m_CommandUID;
 	}
+
+	// Reset sleep vars when Lie Down emote action is detected
+	override void Start(ActionData action_data)
+	{
+		super.Start(action_data);
+
+		if (action_data.m_Player)
+		{
+			// If player has just begun a sleep action, reset their sleep parameters for a fresh sleep
+			if (GetActionCommandZENSLEEP(action_data.m_Player) == DayZPlayerConstants.CMD_GESTUREFB_LYINGDOWN)
+			{
+				action_data.m_Player.ResetSleep();
+			}
+		}
+	}
 };

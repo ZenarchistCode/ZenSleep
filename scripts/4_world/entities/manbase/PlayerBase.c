@@ -1,9 +1,11 @@
 modded class PlayerBase
 {
+	// TODO: I'm a much more experienced modder now, and I realize this is an entire clusterfuck of convolution, it is on my todo list to re-write this entire mod better.
+	// I think 90% of these variables could be reduced/eliminated/optimized better
+
 	// Server-side variables
 	static const int MAX_TIREDNESS = 1000; // The maximum amount our m_Tiredness reading can reach
 	static const float REST_GAIN_PER_SEC = 0.023; // How much rest we recover per second when sleeping
-	bool m_JustStartedSleeping = false; // This tracks our sleep state so that we can reset all sleep variables when player begins a new sleep
 	bool m_CancelSleep = false; // Overrides/cancels sleeping state
 	bool m_IsSleeping = false; // Tracks whether the player is lying down and resting
 	bool m_CantSleep = false; // When this is true, the player wakes up but stays lying down (ie. when max rest is reached)
@@ -14,7 +16,8 @@ modded class PlayerBase
 	float m_RestObjectTick = 1; // Current tick for the rest object checker function
 	float m_AccumulatedRest = 1; // How much rest we have accumulated while sleeping
 	float m_SleepAccumulatorModifier = 0; // This slowly increases while you sleep, making your sleep get faster (rewarding you for staying asleep longer).
-	PluginPlayerStatus m_Mod_ModulePlayerStatus; // The PlayerStatus Plugin object for this mod
+	float m_TimeAsleep = 0; // How long the player has been asleep for
+	PluginPlayerStatus m_ModulePlayerStatus; // The PlayerStatus Plugin object for this mod
 	
 	// Server-side rest object variables
 	int m_RestObjectChecks = 0; // How many times we've scanned the area for rest objects
@@ -90,7 +93,7 @@ modded class PlayerBase
 		RegisterNetSyncVariableInt("m_PlaySleepSound");
 
 		// Prepare player status plugin
-		m_Mod_ModulePlayerStatus = PluginPlayerStatus.Cast(GetPlugin(PluginPlayerStatus));
+		m_ModulePlayerStatus = PluginPlayerStatus.Cast(GetPlugin(PluginPlayerStatus));
 	}
 
 	// Called when the player is loaded
@@ -133,7 +136,7 @@ modded class PlayerBase
 	// (Server-side) Sends an RPC containing all of the server-side sleep config settings that the client needs to be aware of
 	void SendSleepDataToClient()
 	{
-		if (this && !this.IsPlayerDisconnected())
+		if (!IsPlayerDisconnected())
 		{
 			GetRPCManager().SendRPC("ZS_RPC", "RPC_SendSleepDataToClient", new Param7< bool, bool, bool, bool, int, float, float >(m_OnlyShowSleepOnInventory, m_HideHudWhileSleeping, m_AllowInventoryWhileSleep, m_OnlyBlurScreen, m_OnlyShowSleepAbovePercent, m_TirednessHudX, m_TirednessHudY), true, this.GetIdentity());
 		}
@@ -228,6 +231,7 @@ modded class PlayerBase
 	{
 		m_CantSleep = false;
 		m_SleepingInside = false;
+		m_TimeAsleep = 0;
 		m_PlayerRestTick = 0;
 		m_RestObjectTick = 0;
 		m_AccumulatedRest = 1;
@@ -510,27 +514,34 @@ modded class PlayerBase
 		m_PlayerRestTick += deltaTime;
 		m_RestObjectTick += deltaTime;
 
-		if (GetGame().IsDedicatedServer() && GetGame().IsMultiplayer()) // Server-side update
+		if (GetGame().IsDedicatedServer()) // Server-side update
 		{
+			m_Tiredness = GetSingleAgentCount(ZenSleep_Agents.TIREDNESS);
+
 			if (m_PlayerRestTick < GetZenSleepConfig().RestUpdateTick)
+				return;
+
+			float restTick = m_PlayerRestTick;
+			m_PlayerRestTick = 0;
+			
+			if (IsUnconscious())
+				m_FallUnconsciousFromTiredness = false;
+
+			// If player is not asleep, stop here.
+			if (!IsPlayerSleeping())
 			{
+				m_TimeAsleep = 0;
 				return;
 			}
 
-			m_Tiredness = GetSingleAgentCount(ZenSleep_Agents.TIREDNESS);
+			m_TimeAsleep += GetZenSleepConfig().RestUpdateTick;
 
-			if (IsUnconscious())
-			{
-				m_FallUnconsciousFromTiredness = false;
-			}
+			// If player has not been asleep for at least 5 seconds, stop here
+			if (m_TimeAsleep < 5)
+				return;
 
 			// Calculate our rest as a percentage
 			int restPercent = Math.Round(100 - (float)m_Tiredness / MAX_TIREDNESS * 100);
-
-			if (!IsPlayerSleeping()) 
-			{
-				return; // If player is not asleep, stop here and reset relevant sleep-tracking variables.
-			}
 
 			// Check if player is sleeping near a fire and/or rest object and apply any accelerator modifiers
 			if (m_RestObjectTick >= GetZenSleepConfig().RestUpdateTick * 4)
@@ -539,9 +550,7 @@ modded class PlayerBase
 				m_RestObjectTick = 0;
 			}
 
-			bool asleepFor30Secs = m_AccumulatedRest > 1 + REST_GAIN_PER_SEC * 30;
-
-
+			bool asleepFor30Secs = m_TimeAsleep >= 30;
 			float restAccelerator = 1.0;
 			if (asleepFor30Secs)
 				restAccelerator = GetFireSleepAccelerator() + m_RestObjectAccelerator;
@@ -750,8 +759,8 @@ modded class PlayerBase
 			}
 
 			// Increase rest (decrease tiredness) while we are not at max rest
-			m_AccumulatedRest += (REST_GAIN_PER_SEC * m_PlayerRestTick);
-			int rest = m_AccumulatedRest * m_PlayerRestTick * restAccelerator;
+			m_AccumulatedRest += (REST_GAIN_PER_SEC * restTick);
+			int rest = m_AccumulatedRest * restTick * restAccelerator;
 			if (rest > m_Tiredness)
 			{
 				rest = m_Tiredness;
@@ -763,9 +772,9 @@ modded class PlayerBase
 		}
 		else // Client-side update
 		{
-			if (m_Mod_ModulePlayerStatus)
+			if (m_ModulePlayerStatus)
 			{
-				m_Mod_ModulePlayerStatus.SetTiredness(MAX_TIREDNESS - m_Tiredness, MAX_TIREDNESS);
+				m_ModulePlayerStatus.SetTiredness(MAX_TIREDNESS - m_Tiredness, MAX_TIREDNESS);
 			}
 
 			// Check if the player's sleep state has changed
@@ -777,13 +786,23 @@ modded class PlayerBase
 				{
 					m_YawnTime = 0.01; // Close the player's eyes
 				}
+
+				// Apply custom attentuation (TODO: Make the onset gradual, and during deep sleep increase the wackyness off audio)
+				if (m_IsSleeping)
+				{
+					SetMasterAttenuation("ZenSleepAttenuation");
+				}
+				
+				// Cancel attenuation
+				if (!m_IsSleeping)
+				{
+					SetMasterAttenuation("");
+				}
 			}
 
 			// Check if we need to do the yawn screen effect
 			PlayerYawnEffectCheck();
 		}
-
-		m_PlayerRestTick = 0; // Reset player tick counter (prevents checks being made unnecessarily often and lagging server/client)
 	}
 
 	// Checks if the player has achieved the minimum rest level for a sleep immunity boost

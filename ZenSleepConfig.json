@@ -1,4 +1,5 @@
 {
+    "ConfigVersion": "3",
     "CONFIG_MAIN": "------------------------------------------------------------------------------------",
     "MaxWakeTime": 360,
     "AllowInventoryWhileSleep": 0,
@@ -115,6 +116,20 @@
             "MaxRestDay": 80,
             "MaxRestNight": 100,
             "SleepAcceleratorPercent": 10,
+            "Influenza": 1
+        },
+        {
+            "ObjectType": "bl_pallet_bed_s",
+            "MaxRestDay": 80,
+            "MaxRestNight": 100,
+            "SleepAcceleratorPercent": 20,
+            "Influenza": 0
+        },
+        {
+            "ObjectType": "bl_pallet_bed_m",
+            "MaxRestDay": 80,
+            "MaxRestNight": 100,
+            "SleepAcceleratorPercent": 25,
             "Influenza": 0
         }
     ],

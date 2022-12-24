@@ -1,7 +1,7 @@
 class ZenSleepConfig
 {
 	// Set actual config version (doesn't save to json)
-	private static const string CONFIG_VERSION = "2";
+	private static const string CONFIG_VERSION = "3";
 
 	// Config location
 	private const static string zenModFolder = "$profile:\\Zenarchist\\";

@@ -8,9 +8,15 @@
    It would be appreciated if you include link to this original mod page.
 
    In the same spirit, so is mine. Use this code however you like with no credit needed for me - but please credit Lucian for the foundation :)
-*/
 
-#define _ARMA_
+
+
+   24/12/22: I have become much more experienced at modding since creating this re-make while learning the ropes. The code here is 
+			 "acceptable", but not optimal. By that, I mean it works, but it's like a functioning alcoholic. I plan to remake this mod
+			 from the ground-up when I have time - but for now, it is what it is, and if you're like me and love immersion - it works!
+
+			 Stay tuned for "ZenSleep v2.0". I've already spent so much time on this my girlfriend wants to leave me, but I'm no quitter.
+*/
 
 class CfgPatches
 {
@@ -595,5 +601,35 @@ class CfgSoundSets // Sound effect definitions
 	class sleep3_Female_SoundSet : baseCharacter_SoundSet
 	{
 		soundShaders[] = { "sleep3_Female_SoundShader" };
+	};
+};
+
+class CfgSoundEffects
+{
+	class AttenuationsEffects
+	{
+		// Flashbang attenuation. TODO: Spend way too many hours playing with this instead of doing something productive.
+		// Ideas: Increase attenuation and wacky sleep effects if player is very tired / has been sleeping a long time?
+		class ZenSleepAttenuation
+		{
+			class Equalizer0
+			{
+				center[] = { 196,2000,8367,10000 };
+				bandwidth[] = { 2,2,0.1,2 };
+				gain[] = { 1.4125376,0.12589253,1.9952624,0.12589253 };
+			};
+			class Equalizer1
+			{
+				center[] = { 60,1000,2000,10000 };
+				bandwidth[] = { 2,1,0.1,2 };
+				gain[] = { 1,0.3548134,0.25118864,0.12589253 };
+			};
+			class Echo
+			{
+				WetDryMix = 0.25;
+				Feedback = 0.2;
+				Delay = 50;
+			};
+		};
 	};
 };
