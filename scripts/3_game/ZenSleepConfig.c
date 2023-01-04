@@ -1,7 +1,7 @@
 class ZenSleepConfig
 {
 	// Set actual config version (doesn't save to json)
-	private static const string CONFIG_VERSION = "3";
+	private static const string CONFIG_VERSION = "4";
 
 	// Config location
 	private const static string zenModFolder = "$profile:\\Zenarchist\\";
@@ -15,6 +15,7 @@ class ZenSleepConfig
 	int MaxWakeTime = 360; // Max time in minutes you can stay awake WHILE IDLE before you fall unconscious.
 	bool AllowInventoryWhileSleep = false; // Enable/disable the player accessing their inventory while sleeping
 	bool CanUnconInVehicle = true; // Enable/disable falling uncon from tiredness in vehicles
+	bool AttenuateSound = true; // Enable/disable sound attenuation when sleeping
 	int SleepBlackScreen = 1; // Enable/disable screen going black when lying down
 	bool TextNotificationOn = true; // Enable/disable text notifications of rest level
 	int TextNotificationFrequency = 5; // Sends a text notification update every 5 rest ticks
@@ -132,6 +133,7 @@ class ZenSleepConfig
 		ConfigVersion = CONFIG_VERSION;
 
 		// Save default settings for energy drinks
+		EnergyDrinks.Clear();
 		EnergyDrinks.Insert(new EnergyDrink("SodaCan_Pipsi", -15));
 		EnergyDrinks.Insert(new EnergyDrink("SodaCan_Cola", -20));
 		EnergyDrinks.Insert(new EnergyDrink("SodaCan_Spite", -10));
@@ -143,6 +145,7 @@ class ZenSleepConfig
 		EnergyDrinks.Insert(new EnergyDrink("ZenSleep_Syringe", 100));
 		EnergyDrinks.Insert(new EnergyDrink("ZenSleep_StimSyringe", -100));
 		// Save default settings for rest objects
+		RestObjects.Clear();
 		RestObjects.Insert(new RestObject("MediumTent", 80, 100, 10, 0));
 		RestObjects.Insert(new RestObject("MSP_SleepingBag", 80, 100, 10, 0));
 		RestObjects.Insert(new RestObject("MSP_Mattress", 80, 100, 10, 1));

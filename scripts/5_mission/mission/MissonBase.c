@@ -19,7 +19,7 @@ modded class MissionBase extends MissionBaseWorld
 	{
 		if (type == CallType.Client && !GetGame().IsDedicatedServer())
 		{
-			Param7< bool, bool, bool, bool, int, float, float > data;
+			Param8< bool, bool, bool, bool, int, float, float, bool > data;
 			if (!ctx.Read(data)) 
 			{
 				Print("[ZenSleep] Error sync'ing server-side data to client in RPC_SendSleepDataToClient");
@@ -35,6 +35,7 @@ modded class MissionBase extends MissionBaseWorld
 				player.m_HideHudWhileSleeping = data.param2;
 				player.m_AllowInventoryWhileSleep = data.param3;
 				player.m_OnlyBlurScreen = data.param4;
+				player.m_AttenuateSound = data.param8;
 
 				// Ints
 				player.m_OnlyShowSleepAbovePercent = data.param5;

@@ -27,6 +27,7 @@ modded class PlayerBase
 	bool m_FireNearby = false; // Whether or not there was a fire lit nearby recently
 
 	// Client & server sync variables
+	bool m_AttenuateSound = false; // If true, the sound is attenuated when the player is asleep
 	bool m_OnlyBlurScreen = false; // If true, then when the player is sleeping their screen will blur instead of going black
 	bool m_AllowInventoryWhileSleep = false; // Whether or not the player is permitted to access their inventory while sleeping
 	int m_OnlyShowSleepAbovePercent = 0; // From ZenConfig: Sets what sleep level to show the sleep meter at (optional - 0 = disabled)
@@ -116,6 +117,7 @@ modded class PlayerBase
 		m_HideHudWhileSleeping = GetZenSleepConfig().HideHudWhileSleeping;
 		m_AllowInventoryWhileSleep = GetZenSleepConfig().AllowInventoryWhileSleep;
 		m_OnlyBlurScreen = GetZenSleepConfig().SleepBlackScreen == 2;
+		m_AttenuateSound = GetZenSleepConfig().AttenuateSound;
 
 		// Ints
 		m_OnlyShowSleepAbovePercent = GetZenSleepConfig().OnlyShowSleepAbovePercent;
@@ -138,7 +140,7 @@ modded class PlayerBase
 	{
 		if (!IsPlayerDisconnected())
 		{
-			GetRPCManager().SendRPC("ZS_RPC", "RPC_SendSleepDataToClient", new Param7< bool, bool, bool, bool, int, float, float >(m_OnlyShowSleepOnInventory, m_HideHudWhileSleeping, m_AllowInventoryWhileSleep, m_OnlyBlurScreen, m_OnlyShowSleepAbovePercent, m_TirednessHudX, m_TirednessHudY), true, this.GetIdentity());
+			GetRPCManager().SendRPC("ZS_RPC", "RPC_SendSleepDataToClient", new Param8< bool, bool, bool, bool, int, float, float, bool >(m_OnlyShowSleepOnInventory, m_HideHudWhileSleeping, m_AllowInventoryWhileSleep, m_OnlyBlurScreen, m_OnlyShowSleepAbovePercent, m_TirednessHudX, m_TirednessHudY, m_AttenuateSound), true, this.GetIdentity());
 		}
 	}
 
@@ -788,14 +790,15 @@ modded class PlayerBase
 				}
 
 				// Apply custom attentuation (TODO: Make the onset gradual, and during deep sleep increase the wackyness off audio)
-				if (m_IsSleeping)
+				if (m_IsSleeping && m_AttenuateSound)
 				{
 					GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(DelayedSleepSoundAttenuation, Math.RandomFloatInclusive(20000, 30000), false);
 				}
 				
 				// Cancel attenuation
-				if (!m_IsSleeping)
+				if (!m_IsSleeping && m_AttenuateSound)
 				{
+					GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).Remove(DelayedSleepSoundAttenuation);
 					SetMasterAttenuation("");
 				}
 			}
