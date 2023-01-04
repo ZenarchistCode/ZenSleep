@@ -790,7 +790,7 @@ modded class PlayerBase
 				// Apply custom attentuation (TODO: Make the onset gradual, and during deep sleep increase the wackyness off audio)
 				if (m_IsSleeping)
 				{
-					SetMasterAttenuation("ZenSleepAttenuation");
+					GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(DelayedSleepSoundAttenuation, Math.RandomFloatInclusive(20000, 30000), false);
 				}
 				
 				// Cancel attenuation
@@ -802,6 +802,15 @@ modded class PlayerBase
 
 			// Check if we need to do the yawn screen effect
 			PlayerYawnEffectCheck();
+		}
+	}
+
+	// Delay onset of sound attenuation
+	void DelayedSleepSoundAttenuation()
+	{
+		if (m_IsSleeping)
+		{
+			SetMasterAttenuation("ZenSleepAttenuation");
 		}
 	}
 
