@@ -18,8 +18,8 @@ modded class EmoteManager
 	{
 		bool playEmote = super.PlayEmote(id);
 
-		// If the player has used the lie down emote, prepare for sleep
-		if (playEmote && id == EmoteConstants.ID_EMOTE_LYINGDOWN)
+		// If the player has used the lie down emote, prepare for sleep (GetSimulationTimeStamp() >= 300 allows using sleeping emote upon login without triggering sleep fx - used for compatibility with my Immersive Login mod)
+		if (playEmote && id == EmoteConstants.ID_EMOTE_LYINGDOWN && m_Player.GetSimulationTimeStamp() >= 300)
 		{
 			m_Player.ResetSleep(); // Reset all sleep variables for a fresh sleep
 			m_Player.CheckIfPlayerIsInside(); // Send a roof raycast to see if the player is inside (for applying sleep accelerators)

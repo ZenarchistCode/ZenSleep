@@ -1,8 +1,5 @@
 modded class PlayerBase
 {
-	// TODO: I'm a much more experienced modder now, and I realize this is an entire clusterfuck of convolution, it is on my todo list to re-write this entire mod better.
-	// I think 90% of these variables could be reduced/eliminated/optimized better
-
 	// Server-side variables
 	static const int MAX_TIREDNESS = 1000; // The maximum amount our m_Tiredness reading can reach
 	static const float REST_GAIN_PER_SEC = 0.023; // How much rest we recover per second when sleeping
@@ -46,6 +43,7 @@ modded class PlayerBase
 	float m_TirednessHudY = 0.03; // Tiredness GUI HUD y position (needs server-side instructions to move it)
 
 	// Client-side & server-side no sync variables
+	bool m_IsAllowedToSleep = false; // Added for compatibility with my Immersive Login mod that lies down on login (prevents triggering sleep)
 	bool m_ReceivedSleepConfig = false; // Tracks whether or not sleep server config was received by client yet
 	bool m_WasSleeping = false; // Tracks the player's sleep state to enable/disable the black screen
 	float m_YawnTime = 0; // Used for governing the speed of the black screen blink effect.
@@ -57,9 +55,6 @@ modded class PlayerBase
 	int m_prevTirednessPercent; // Used for staggering the text updates telling the player their rest %
 	EffectSound yawnSoundEffect = NULL; // Used for playing the yawn sounds
 	EffectSound sleepSoundEffect = NULL; // Used for playing the sleep sounds
-
-	// Create player
-	void PlayerBase() { }
 
 	// Print a debug message (client-only)
 	void ZS_DebugMessage(string message)
@@ -231,6 +226,7 @@ modded class PlayerBase
 	// Resets all sleep variables for a fresh sleep (server-side)
 	void ResetSleep()
 	{
+		m_IsAllowedToSleep = true;
 		m_CantSleep = false;
 		m_SleepingInside = false;
 		m_TimeAsleep = 0;
@@ -242,6 +238,7 @@ modded class PlayerBase
 		m_RestObjectMaxSleep = 0;
 		m_RestObjectAccelerator = 0;
 		m_RestObjectChecks = 0;
+		m_YawnTime = 0;
 		m_RestObjectInfluenza = true;
 		m_FireNearby = false;
 		m_SleepImmunityActivated = false;
@@ -513,6 +510,9 @@ modded class PlayerBase
 	// This method handles all of our rest checks
 	void PlayerRestCheck(float deltaTime)
 	{
+		if (!m_IsAllowedToSleep)
+			return;
+
 		m_PlayerRestTick += deltaTime;
 		m_RestObjectTick += deltaTime;
 
@@ -1066,6 +1066,9 @@ modded class PlayerBase
 	bool m_StoppedSleepEffect = false;
 	void SetTirednessVignette(float val)
 	{
+		if (!m_IsAllowedToSleep)
+			return;
+
 		m_TirednessVignetteValue = val;
 
 		if (val > 0)
