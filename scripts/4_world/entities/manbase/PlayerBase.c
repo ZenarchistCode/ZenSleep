@@ -154,18 +154,27 @@ modded class PlayerBase
 		// Debug message
 		//ZS_DebugMessage("Sleeping=" + m_IsSleeping + " YawnSound=" + m_PlayYawnSound + " SleepSound=" + m_PlaySleepSound + " CurrentYawn=" + m_CurrentYawn + " FallUnconsciousFromTiredness=" + m_FallUnconsciousFromTiredness);
 
-		// Check for yawn sound trigger. This plays on ALL player objects, so we need to do the blink effect separately on PlayerRestCheck
-		if (m_PlayYawnSound > 0 && !IsUnconscious()) // If we receive a yawn sound effect ID from server and the player is not uncon, play the sound.
+		// Update client 
+		if (GetGame().IsClient())
 		{
-			PlayYawnSound(m_PlayYawnSound);
-			m_PlayYawnSound = 0;
-		}
+			// Check for yawn sound trigger. This plays on ALL player objects, so we need to do the blink effect separately on PlayerRestCheck
+			if (m_PlayYawnSound > 0 && !IsUnconscious()) // If we receive a yawn sound effect ID from server and the player is not uncon, play the sound.
+			{
+				PlayYawnSound(m_PlayYawnSound);
+				m_PlayYawnSound = 0;
+			}
 
-		// Check for sleep sound trigger.
-		if (m_PlaySleepSound > 0)
-		{
-			PlaySleepSound(m_PlaySleepSound);
-			m_PlaySleepSound = 0;
+			// Check for sleep sound trigger.
+			if (m_PlaySleepSound > 0)
+			{
+				PlaySleepSound(m_PlaySleepSound);
+				m_PlaySleepSound = 0;
+			}
+
+			if (m_ModulePlayerStatus)
+			{
+				m_ModulePlayerStatus.SetTiredness(MAX_TIREDNESS - m_Tiredness, MAX_TIREDNESS);
+			}
 		}
 	}
 
@@ -774,11 +783,6 @@ modded class PlayerBase
 		}
 		else // Client-side update
 		{
-			if (m_ModulePlayerStatus)
-			{
-				m_ModulePlayerStatus.SetTiredness(MAX_TIREDNESS - m_Tiredness, MAX_TIREDNESS);
-			}
-
 			// Check if the player's sleep state has changed
 			if (m_IsSleeping != m_WasSleeping)
 			{
