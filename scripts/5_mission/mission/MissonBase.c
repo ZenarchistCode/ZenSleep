@@ -88,7 +88,8 @@ modded class MissionBase extends MissionBaseWorld
 			Class.CastTo(player, all_players.Get(i));
 			if (player)
 			{
-				player.ScheduleSleepDataUpdate();
+				player.SyncServerConfig();
+				player.SendSleepDataToClient();
 			}
 		}
 	}

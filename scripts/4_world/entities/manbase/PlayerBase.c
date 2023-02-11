@@ -100,7 +100,10 @@ modded class PlayerBase
 		if (GetGame().IsDedicatedServer())
 		{
 			// Send server-side data to client
-			ScheduleSleepDataUpdate();
+			m_Tiredness = GetSingleAgentCount(ZenSleep_Agents.TIREDNESS);
+			SyncServerConfig();
+			SendSleepDataToClient();
+			SetSynchDirty();
 		}
 	}
 
@@ -120,14 +123,6 @@ modded class PlayerBase
 		// Floats
 		m_TirednessHudX = GetZenSleepConfig().TirednessHudX;
 		m_TirednessHudY = GetZenSleepConfig().TirednessHudY;
-	}
-
-	// (Server-side) Queue sending of server-side settings
-	void ScheduleSleepDataUpdate()
-	{
-		SyncServerConfig();
-		SendSleepDataToClient();
-		GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(SendSleepDataToClient, 5000, false);
 	}
 
 	// (Server-side) Sends an RPC containing all of the server-side sleep config settings that the client needs to be aware of
