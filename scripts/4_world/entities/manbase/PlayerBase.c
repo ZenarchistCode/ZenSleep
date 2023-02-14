@@ -166,7 +166,7 @@ modded class PlayerBase
 				m_PlaySleepSound = 0;
 			}
 
-			if (m_ModulePlayerStatus)
+			if (IsControlledPlayer() && m_ModulePlayerStatus)
 			{
 				m_ModulePlayerStatus.SetTiredness(MAX_TIREDNESS - m_Tiredness, MAX_TIREDNESS);
 			}

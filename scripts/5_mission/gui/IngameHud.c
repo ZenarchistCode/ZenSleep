@@ -51,7 +51,8 @@ modded class IngameHud
 		super.RefreshHudVisibility();
 
 		if (!m_Tiredness || !m_TirednessIconPanel || !m_TirednessBarPanel)
-		{ // Something has gone wrong loading UI - stop here.
+		{ 
+			// Something has gone wrong loading UI - stop here.
 			return;
 		}
 
