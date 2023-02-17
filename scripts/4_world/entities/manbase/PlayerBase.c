@@ -184,7 +184,6 @@ modded class PlayerBase
 		}
 
 		yawnSoundEffect = SEffectManager.PlaySoundOnObject(soundSetYawn, this);
-		//yawnSoundEffect.Event_OnSoundWaveEnded.Insert(StopYawnSound);
 		yawnSoundEffect.SetSoundAutodestroy(true);
 	}
 
@@ -330,6 +329,7 @@ modded class PlayerBase
 	// (Server) Tells the client to play a yawn sound (and trigger black screen effect)
 	void MakeYawnSound()
 	{
+		m_IsAllowedToSleep = true;
 		m_PlayYawnSound = Math.RandomIntInclusive(1, 3); // Play random yawn sound effect out of 3 possible
 		if (m_PlayYawnSound == m_LastYawnSound)
 		{
@@ -377,8 +377,9 @@ modded class PlayerBase
 	{
 		if (m_CurrentYawn != m_LastYawn)
 		{
+			m_IsAllowedToSleep = true; // Client-side, allow yawn effect (for compatibility with my Immersive Login mod)
 			m_LastYawn = m_CurrentYawn;
-			if (m_YawnTime == 0) // Trigger yawn black screen effect
+			if (m_YawnTime == 0 && (Math.RandomFloat01() <= 0.8 || m_Tiredness >= 900)) // Trigger yawn black screen effect (with slight randomness)
 			{
 				m_YawnTime = 0.01;
 			}
@@ -514,9 +515,6 @@ modded class PlayerBase
 	// This method handles all of our rest checks
 	void PlayerRestCheck(float deltaTime)
 	{
-		if (!m_IsAllowedToSleep)
-			return;
-
 		m_PlayerRestTick += deltaTime;
 		m_RestObjectTick += deltaTime;
 
@@ -532,6 +530,9 @@ modded class PlayerBase
 			
 			if (IsUnconscious())
 				m_FallUnconsciousFromTiredness = false;
+
+			if (!m_IsAllowedToSleep)
+				return;
 
 			// If player is not asleep, stop here.
 			if (!IsPlayerSleeping())
@@ -802,7 +803,7 @@ modded class PlayerBase
 				}
 			}
 
-			// Check if we need to do the yawn screen effect
+			// Check if we need to do the yawn black screen effect (slightly randomized)
 			PlayerYawnEffectCheck();
 		}
 	}
@@ -1048,6 +1049,7 @@ modded class PlayerBase
 	// Custom method to set the player unconscious from being too tired
 	void SetUnconsciousFromTiredness()
 	{
+		m_IsAllowedToSleep = true;
 		m_FallUnconsciousFromTiredness = true;
 		ZenSleep_SyncState();
 	}
