@@ -1,3 +1,5 @@
+NOTE: THIS MOD IS DEPRECATED! I MADE A TOTAL RE-WRITE VERSION 2 OF THIS MOD AVAILABLE HERE: https://github.com/ZenarchistCode/ZenSleepV2/
+
 What Is This?
 
 This mod adds an immersive sleeping feature to the game.
